@@ -31,7 +31,7 @@ class LinearRegression:
 
     @staticmethod
     def _to_numpy(a) -> npt.NDArray:
-        return a.to_numpy(dtype=np.float64) if hasattr(a, 'to_numpy') else a.astype(np.float64)
+        return np.ascontiguousarray(a.to_numpy(dtype=np.float64, ) if hasattr(a, 'to_numpy') else a.astype(np.float64))
 
     def model_details(self) -> dict:
         m = {k: v for k, v in self.__dict__.items() if k not in ['features', 'coef_']}
@@ -40,7 +40,10 @@ class LinearRegression:
         return m
 
     def model_outliers(self) -> npt.NDArray:
-        """calculate error z-scores to determine which datapoints have an out-sized influence on model performance"""
+        """
+        calculate error z-scores to determine which datapoints have an out-sized influence on model performance
+        https://hackernoon.com/how-to-use-approximate-leave-one-out-cross-validation-to-build-better-models-vg1u35g2/
+        """
         errors = approximate_leave_one_out_errors(self.X, self.y, self.alpha_)
         mean, stdev = np.mean(errors), np.std(errors)
         return (errors - mean) / stdev
