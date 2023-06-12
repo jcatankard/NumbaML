@@ -31,7 +31,7 @@ class LinearRegression:
 
     @staticmethod
     def _to_numpy(a) -> npt.NDArray:
-        return np.ascontiguousarray(a.to_numpy(dtype=np.float64, ) if hasattr(a, 'to_numpy') else a.astype(np.float64))
+        return np.asarray(a, dtype=np.float64, order='C')
 
     def model_details(self) -> dict:
         m = {k: v for k, v in self.__dict__.items() if k not in ['features', 'coef_']}
