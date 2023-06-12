@@ -1,4 +1,4 @@
-from numbaml.cross_validation import find_alpha, find_alpha_aloocv
+from numbaml.model_selection import find_alpha, find_alpha_aloocv
 from numbaml.predict import predict
 from numbaml.fit import fit
 import numpy.typing as npt

@@ -1,4 +1,4 @@
-from numbaml.cross_validation import find_alpha_aloocv, find_alpha
+from numbaml.model_selection import find_alpha_aloocv, find_alpha
 from sklearn.datasets import make_regression
 import pandas as pd
 import numpy as np

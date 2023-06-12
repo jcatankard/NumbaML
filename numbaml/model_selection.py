@@ -6,13 +6,13 @@ import numpy as np
 
 
 @njit(boolean[:, ::1](int64, int64), cache=True)
-def cv_test_split(n_samples, cv):
+def kfold(n_samples, n_splits):
     """scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html#sklearn.model_selection.KFold"""
-    first_splits = n_samples % cv
-    test_flags = np.zeros(shape=(cv, n_samples), dtype=boolean)
+    first_splits = n_samples % n_splits
+    test_flags = np.zeros(shape=(n_splits, n_samples), dtype=boolean)
     start = 0
-    for i in range(cv):
-        size = n_samples // cv + 1 if i < first_splits else n_samples // cv
+    for i in range(n_splits):
+        size = n_samples // n_splits + 1 if i < first_splits else n_samples // n_splits
         end = start + size
         test_flags[i][start: end] = np.ones(size, dtype=boolean)
         start += size
@@ -27,7 +27,7 @@ def find_alpha(x, y, alphas, cv, r2):
     best_score = -np.inf
     best_alpha = np.float64(0)
 
-    all_test_flags = cv_test_split(n_samples, cv)
+    all_test_flags = kfold(n_samples, n_splits=cv)
 
     for i in range(alphas.size):
         a = alphas[i]
