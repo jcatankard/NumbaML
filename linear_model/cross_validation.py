@@ -1,7 +1,7 @@
-from linear_model.fit import fit, add_intercept, create_penalty_matrix
+from numbaml.fit import fit, add_intercept, create_penalty_matrix
 from numba import njit, float64, int64, types, prange, boolean
-from linear_model.scoring import calculate_score
-from linear_model.predict import predict
+from numbaml.scoring import calculate_score
+from numbaml.predict import predict
 import numpy as np
 
 
