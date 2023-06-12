@@ -1,4 +1,4 @@
-from numbaml.model_selection import find_alpha, find_alpha_aloocv
+from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo
 from numbaml.predict import predict
 from numbaml.fit import fit
 import numpy.typing as npt
@@ -89,8 +89,8 @@ class RidgeCV(BaseModel):
 
         x, y = self._to_numpy(x), self._to_numpy(y)
 
-        self.alpha_, self.best_score_ = find_alpha_aloocv(x, y, self.alphas) if self.gcv\
-            else find_alpha(x, y, self.alphas, self.cv, self.r2)
+        self.alpha_, self.best_score_ = find_alpha_loo(x, y, self.alphas) if self.gcv\
+            else find_alpha_kfolds(x, y, self.alphas, self.cv, self.r2)
 
         self.coef_, self.intercept_ = fit(x, y, self.alpha_)
 

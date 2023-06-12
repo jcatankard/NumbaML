@@ -1,4 +1,4 @@
-from numba import njit, float64, boolean
+from numba import njit, float64
 import numpy as np
 
 
@@ -15,11 +15,3 @@ def r2_score(y_true, y_pred):
     total_sum_squares = np.sum((y_true - y_mean) ** 2)
     residual_sum_squares = np.sum((y_true - y_pred) ** 2)
     return 1 - (residual_sum_squares / total_sum_squares)
-
-
-@njit(float64(float64[::1], float64[::1], boolean), cache=True)
-def calculate_score(y_true, y_pred, r2):
-    if r2:
-        return r2_score(y_true, y_pred)
-    else:
-        return neg_mean_squared_error(y_true, y_pred)

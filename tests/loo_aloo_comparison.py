@@ -1,4 +1,4 @@
-from numbaml.model_selection import find_alpha_aloocv, find_alpha
+from numbaml.model_selection import find_alpha_loo, find_alpha_kfolds
 from sklearn.datasets import make_regression
 import pandas as pd
 import numpy as np
@@ -18,11 +18,11 @@ for i in range(trials):
                            noise=noise
                            )
     start_cv = time.time()
-    alpha_cv, score_cv = find_alpha(X, y, alphas, cv=n_samples, r2=False)
+    alpha_cv, score_cv = find_alpha_kfolds(X, y, alphas, cv=n_samples, r2=False)
     time_cv = time.time() - start_cv
 
     start_gcv = time.time()
-    alpha_gcv, score_gcv = find_alpha_aloocv(X, y, alphas)
+    alpha_gcv, score_gcv = find_alpha_loo(X, y, alphas)
     time_gcv = time.time() - start_gcv
 
     results[i] = np.array([n_samples, n_features, noise,

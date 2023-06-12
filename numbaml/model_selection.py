@@ -1,6 +1,6 @@
 from numbaml.fit import fit, add_intercept, create_penalty_matrix
 from numba import njit, float64, int64, types, prange, boolean
-from numbaml.metrics import calculate_score
+from numbaml.metrics import r2_score, neg_mean_squared_error
 from numbaml.predict import predict
 import numpy as np
 
@@ -19,9 +19,14 @@ def kfold(n_samples, n_splits):
     return test_flags
 
 
+@njit(float64(float64[::1], float64[::1], boolean), cache=True)
+def calculate_score(y_true, y_pred, r2):
+    return r2_score(y_true, y_pred) if r2 else neg_mean_squared_error(y_true, y_pred)
+
+
 @njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1], int64, boolean),
       parallel=True, cache=True)
-def find_alpha(x, y, alphas, cv, r2):
+def find_alpha_kfolds(x, y, alphas, cv, r2):
     n_samples, n_features = x.shape
 
     best_score = -np.inf
@@ -66,7 +71,7 @@ def approximate_leave_one_out(x, y, l2_penalty):
 
 
 @njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1]), parallel=True, cache=True)
-def find_alpha_aloocv(x, y, alphas):
+def find_alpha_loo(x, y, alphas):
 
     all_scores = np.zeros(alphas.size, dtype=np.float64)
     for i in prange(alphas.size):
