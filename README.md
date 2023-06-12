@@ -13,7 +13,7 @@ The aim has been to reproduce the key functionality from Scikit-Learn as accurat
 ### LinearRegression
 
 ```
-from linear_model.linear_regression import LinearRegression
+from numbaml.linear_model import LinearRegression
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 
@@ -29,7 +29,7 @@ y_pred = model.predict(X_test)
 ### Ridge
 
 ```
-from linear_model.ridge import Ridge
+from numbaml.linear_model import Ridge
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 
@@ -48,7 +48,7 @@ When leaving **CV=None**,
 a highly efficient version of cross-validation is used replicating the implementation in Scikit-Learn.
 
 ```
-from linear_model.ridge import RidgeCV
+from numbaml.linear_model import RidgeCV
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 
