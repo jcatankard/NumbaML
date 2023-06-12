@@ -1,6 +1,6 @@
 from numbaml.fit import fit, add_intercept, create_penalty_matrix
 from numba import njit, float64, int64, types, prange, boolean
-from numbaml.scoring import calculate_score
+from numbaml.metrics import calculate_score
 from numbaml.predict import predict
 import numpy as np
 
