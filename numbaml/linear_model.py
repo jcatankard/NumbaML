@@ -1,4 +1,4 @@
-from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo
+from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo, approximate_leave_one_out_errors
 from numbaml.predict import predict
 from numbaml.fit import fit
 import numpy.typing as npt
@@ -6,11 +6,20 @@ from typing import List
 import numpy as np
 
 
-class BaseModel:
+class LinearRegression:
+    """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html"""
     def __init__(self):
         self.features: List[str] = None
         self.coef_: npt.NDArray = None
         self.intercept_: float = None
+        self.X: npt.NDArray = None
+        self.y: npt.NDArray = None
+        self.alpha_: float = float(0)
+
+    def fit(self, x, y):
+        self._assign_features(x)
+        self.X, self.y = self._to_numpy(x), self._to_numpy(y)
+        self.coef_, self.intercept_ = fit(self.X, self.y, l2_penalty=self.alpha_)
 
     def predict(self, x) -> npt.NDArray:
         x = self._to_numpy(x)
@@ -30,20 +39,16 @@ class BaseModel:
         m['model'] = self.__class__
         return m
 
-
-class LinearRegression(BaseModel):
-    """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html"""
-    def __init__(self):
-        super().__init__()
-
-    def fit(self, x, y):
-        self._assign_features(x)
-        x, y = self._to_numpy(x), self._to_numpy(y)
-        self.coef_, self.intercept_ = fit(x, y, l2_penalty=0)
+    def model_outliers(self) -> npt.NDArray:
+        """calculate error z-scores to determine which datapoints have an out-sized influence on model performance"""
+        errors = approximate_leave_one_out_errors(self.X, self.y, self.alpha_)
+        mean, stdev = np.mean(errors), np.std(errors)
+        return (errors - mean) / stdev
 
 
-class Ridge(BaseModel):
+class Ridge(LinearRegression):
     """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html#sklearn.linear_model.Ridge"""
+
     def __init__(self, alpha: float = 1.):
         """
         :param alpha: l2 penalization.
@@ -51,14 +56,10 @@ class Ridge(BaseModel):
         super().__init__()
         self.alpha_: float = float(alpha)
 
-    def fit(self, x, y):
-        self._assign_features(x)
-        x, y = self._to_numpy(x), self._to_numpy(y)
-        self.coef_, self.intercept_ = fit(x, y, l2_penalty=self.alpha_)
 
-
-class RidgeCV(BaseModel):
+class RidgeCV(LinearRegression):
     """scikit-learn.org/stable/modules/generated/sklearn.numbaml.RidgeCV.html#sklearn.numbaml.RidgeCV"""
+
     def __init__(self, alphas: List[float] = (0.1, 1.0, 10.0), cv: int = None, scoring: str = None):
         """
         :param alphas: array-like of shape (n_alphas,), default=(0.1, 1.0, 10.0)
@@ -87,12 +88,12 @@ class RidgeCV(BaseModel):
         self._assign_cv(x.shape[0])
         self._assign_scoring(x.shape[0])
 
-        x, y = self._to_numpy(x), self._to_numpy(y)
+        self.X, self.y = self._to_numpy(x), self._to_numpy(y)
 
-        self.alpha_, self.best_score_ = find_alpha_loo(x, y, self.alphas) if self.gcv\
-            else find_alpha_kfolds(x, y, self.alphas, self.cv, self.r2)
+        self.alpha_, self.best_score_ = find_alpha_loo(self.X, self.y, self.alphas) if self.gcv \
+            else find_alpha_kfolds(self.X, self.y, self.alphas, self.cv, self.r2)
 
-        self.coef_, self.intercept_ = fit(x, y, self.alpha_)
+        self.coef_, self.intercept_ = fit(self.X, self.y, self.alpha_)
 
     def _assign_cv(self, n_samples: int):
         self.cv = n_samples if self.cv is None else self.cv

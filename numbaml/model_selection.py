@@ -55,8 +55,9 @@ def find_alpha_kfolds(x, y, alphas, cv, r2):
     return best_alpha, best_score
 
 
-@njit(float64(float64[:, ::1], float64[::1], float64), cache=True)
-def approximate_leave_one_out(x, y, l2_penalty):
+@njit(float64[::1](float64[:, ::1], float64[::1], float64), cache=True)
+def approximate_leave_one_out_errors(x, y, l2_penalty):
+    """https://medium.com/@jcatankard_76170/efficient-leave-one-out-cross-validation-f1dee3b68dfe"""
 
     coefs, intercept = fit(x, y, l2_penalty=l2_penalty)
     preds = predict(x, coefs, intercept)
@@ -66,8 +67,7 @@ def approximate_leave_one_out(x, y, l2_penalty):
     penalty = create_penalty_matrix(l2_penalty, n_features=x.shape[1])
 
     h = np.diag(x @ np.linalg.inv(x.T @ x + penalty) @ x.T)
-    mean_squared_errors = (residuals / (1 - h)) ** 2
-    return - np.mean(mean_squared_errors)
+    return residuals / (1 - h)
 
 
 @njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1]), parallel=True, cache=True)
@@ -75,7 +75,9 @@ def find_alpha_loo(x, y, alphas):
 
     all_scores = np.zeros(alphas.size, dtype=np.float64)
     for i in prange(alphas.size):
-        all_scores[i] = approximate_leave_one_out(x, y, l2_penalty=alphas[i])
+        errors = approximate_leave_one_out_errors(x, y, l2_penalty=alphas[i])
+        # calculate neg mean squared error
+        all_scores[i] = - np.mean(errors ** 2)
 
     best_alpha = alphas[np.argmax(all_scores)]
     best_score = np.max(all_scores)
