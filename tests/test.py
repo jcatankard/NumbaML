@@ -1,6 +1,4 @@
-from linear_model.linear_regression import LinearRegression
-from linear_model.ridge_cv import RidgeCV
-from linear_model.ridge import Ridge
+from numbaml.linear_model import LinearRegression, Ridge, RidgeCV
 
 from sklearn.linear_model import LinearRegression as SKLLinearRegression
 from sklearn.linear_model import RidgeCV as SKLRidgeCV
@@ -132,7 +130,7 @@ def check_aloocv(trials: int = 1):
         print('best score:', test(np.float64(skl_model.best_score_), np.float64(model.best_score_)))
 
 
-# check_ridge(5)
-# check_linear_regression(5)
+check_ridge(5)
+check_linear_regression(5)
 check_ridgecv(5)
-# check_aloocv(5)
+check_aloocv(5)
