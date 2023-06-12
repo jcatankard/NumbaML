@@ -82,8 +82,6 @@ def check_ridge(trials: int = 1):
         print('coefs:', test(skl_model.coef_, model.coef_))
         print('intercept:', test(np.float64(skl_model.intercept_), np.float64(model.intercept_)))
 
-        print(model.coef_ / skl_model.coef_)
-
 
 def check_ridgecv(trials: int = 1):
     """this test to aims to show that RidgeCV is equivalent to sci-kit learn RidgeCV"""
