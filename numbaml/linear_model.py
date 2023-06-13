@@ -1,4 +1,5 @@
 from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo, approximate_leave_one_out_errors
+from numbaml.confidence_intervals import conf_int
 from numbaml.predict import predict
 from numbaml.fit import fit
 import numpy.typing as npt
@@ -67,6 +68,9 @@ class LinearRegression:
         errors = approximate_leave_one_out_errors(self.X, self.y, self.alpha_)
         mean, stdev = np.mean(errors), np.std(errors)
         return (errors - mean) / stdev
+
+    def conf_int(self, sig=.05):
+        return conf_int(self.X, self.y, self.params_, alpha=sig)
 
 
 class Ridge(LinearRegression):
