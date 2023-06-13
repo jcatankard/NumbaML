@@ -38,8 +38,8 @@ X, y = make_regression()
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 model = Ridge(alpha=.9)
-model.fit(X, y)
-y_pred = model.predict(X)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
 ```
 
 ### RidgeCV
@@ -63,6 +63,24 @@ y_pred = model.predict(X_test)
 
 ### Other features
 A couple of extra features having been added which may be useful.
+
+
+#### conf_int
+Method that return confidence intervals for model parameters (intercept and coefs).
+```
+from numbaml.linear_model import Ridge
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+
+
+X, y = make_regression()
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = Ridge(alpha=.9)
+model.fit(X_train, y_train)
+ci = model.conf_int(sig=0.05)
+lower, upper = ci[:, 0], ci1[:, 1]
+```
 
 #### model_details
 Using this method on a model will return a dictionary of the key model attributes
