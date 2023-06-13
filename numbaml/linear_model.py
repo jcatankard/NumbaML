@@ -8,9 +8,15 @@ import numpy as np
 
 class LinearRegression:
     """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html"""
-    def __init__(self):
+    def __init__(self, fit_intercept: bool = True):
+        """
+        :param fit_intercept: Whether to calculate the intercept for this model.
+        If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
+        """
+        self.fit_intercept = fit_intercept
         self.features: List[str] = None
         self.coef_: npt.NDArray = None
+        self.params_: npt.NDArray = None
         self.intercept_: float = None
         self.X: npt.NDArray = None
         self.y: npt.NDArray = None
@@ -19,11 +25,25 @@ class LinearRegression:
     def fit(self, x, y):
         self._assign_features(x)
         self.X, self.y = self._to_numpy(x), self._to_numpy(y)
-        self.coef_, self.intercept_ = fit(self.X, self.y, l2_penalty=self.alpha_)
+        self.X = self._add_intercept(self.X)
+        self.params_ = fit(self.X, self.y, l2_penalty=self.alpha_)
+        self._assign_params()
 
     def predict(self, x) -> npt.NDArray:
         x = self._to_numpy(x)
-        return predict(x, self.coef_, self.intercept_)
+        x = self._add_intercept(x)
+        return predict(x, self.params_)
+
+    def _add_intercept(self, x: npt.NDArray) -> npt.NDArray:
+        if self.fit_intercept:
+            n_samples = x.shape[0]
+            intercept = np.ones((n_samples, 1), dtype=np.float64)
+            x = np.concatenate([intercept, x], axis=1)
+        return x
+
+    def _assign_params(self):
+        self.intercept_ = self.params_[0] if self.fit_intercept else float(0)
+        self.coef_ = self.params_[1:] if self.fit_intercept else self.params_
 
     def _assign_features(self, x):
         n_features = x.shape[1]
@@ -52,18 +72,21 @@ class LinearRegression:
 class Ridge(LinearRegression):
     """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html#sklearn.linear_model.Ridge"""
 
-    def __init__(self, alpha: float = 1.):
+    def __init__(self, alpha: float = 1., fit_intercept: bool = True):
         """
         :param alpha: l2 penalization.
+        :param fit_intercept: Whether to calculate the intercept for this model.
+        If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
         """
-        super().__init__()
+        super().__init__(fit_intercept=fit_intercept)
         self.alpha_: float = float(alpha)
 
 
 class RidgeCV(LinearRegression):
     """scikit-learn.org/stable/modules/generated/sklearn.numbaml.RidgeCV.html#sklearn.numbaml.RidgeCV"""
 
-    def __init__(self, alphas: List[float] = (0.1, 1.0, 10.0), cv: int = None, scoring: str = None):
+    def __init__(self, alphas: List[float] = (0.1, 1.0, 10.0), cv: int = None, scoring: str = None,
+                 fit_intercept: bool = True):
         """
         :param alphas: array-like of shape (n_alphas,), default=(0.1, 1.0, 10.0)
             Regularization strength; must be a positive float.
@@ -76,8 +99,10 @@ class RidgeCV(LinearRegression):
         (i.e. when using leave-one-out cross-validation) and r2 score otherwise.
             'r2' for (coefficient of determination) regression score
             'neg_mean_squared_error' for the negative mean squared error
+        :param fit_intercept: Whether to calculate the intercept for this model.
+        If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
         """
-        super().__init__()
+        super().__init__(fit_intercept=fit_intercept)
         self.alphas = np.array(alphas, dtype=np.float64)
         self.cv = cv
         self.scoring = scoring
@@ -92,11 +117,13 @@ class RidgeCV(LinearRegression):
         self._assign_scoring(x.shape[0])
 
         self.X, self.y = self._to_numpy(x), self._to_numpy(y)
+        self.X = self._add_intercept(self.X)
 
         self.alpha_, self.best_score_ = find_alpha_loo(self.X, self.y, self.alphas) if self.gcv \
             else find_alpha_kfolds(self.X, self.y, self.alphas, self.cv, self.r2)
 
-        self.coef_, self.intercept_ = fit(self.X, self.y, self.alpha_)
+        self.params_ = fit(self.X, self.y, self.alpha_)
+        self._assign_params()
 
     def _assign_cv(self, n_samples: int):
         self.cv = n_samples if self.cv is None else self.cv

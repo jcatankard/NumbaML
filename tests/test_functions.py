@@ -64,6 +64,25 @@ def test_linear_regression(trials: int = 1):
         print('intercept:', evaluate(np.float64(skl_model.intercept_), np.float64(model.intercept_)))
 
 
+def test_fit_intercept_false(trials: int = 1):
+    """this test aims to show the fit_intercept=False parameter works"""
+    for n in range(trials):
+        print(f'---------------- CHECK fit_intercept=False - TRIAL {n + 1} ----------------')
+        x, y, alphas = create_data(n_alphas=0)
+
+        skl_model = SKLLinearRegression(fit_intercept=False)
+        skl_model.fit(x, y)
+        skl_predict = skl_model.predict(x)
+
+        model = LinearRegression(fit_intercept=False)
+        model.fit(x, y)
+        predict = model.predict(x)
+
+        print('predict:', evaluate(skl_predict, predict))
+        print('coefs:', evaluate(skl_model.coef_, model.coef_))
+        print('intercept:', evaluate(np.float64(skl_model.intercept_), np.float64(model.intercept_)))
+
+
 def test_ridge(trials: int = 1):
     """this test aims to show the Ridge is equivalent to sci-kit learn Ridge"""
     for n in range(trials):

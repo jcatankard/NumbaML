@@ -1,15 +1,5 @@
-from numba import njit, int64, float64, types
+from numba import njit, int64, float64
 import numpy as np
-
-
-@njit(float64[:, ::1](float64[:, ::1]), cache=True)
-def add_intercept(x):
-    n_samples, n_features = x.shape
-    intercept = np.ones((n_samples, 1), dtype=np.float64)
-    x_w_intercept = np.zeros(shape=(n_samples, 1 + n_features), dtype=np.float64)
-    x_w_intercept[:, : 1] = intercept
-    x_w_intercept[:, 1:] = x
-    return x_w_intercept
 
 
 @njit(float64[:, ::1](float64, int64), cache=True)
@@ -21,7 +11,7 @@ def create_penalty_matrix(l2_penalty, n_features):
     return l2_penalty * identity
 
 
-@njit(types.Tuple((float64[::1], float64))(float64[:, ::1], float64[::1], float64), cache=True)
+@njit(float64[::1](float64[:, ::1], float64[::1], float64), cache=True)
 def fit(x, y, l2_penalty):
     """
     Solution 1 (solve regression formula for B)
@@ -41,7 +31,6 @@ def fit(x, y, l2_penalty):
     :param l2_penalty: regularization penalty
     :return: coefficients, intercept
     """
-    x = add_intercept(x)
     penalty = create_penalty_matrix(l2_penalty, n_features=x.shape[1])
     weights = np.linalg.inv(x.T @ x + penalty) @ x.T @ y
-    return weights[1:], weights[0]
+    return weights

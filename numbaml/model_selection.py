@@ -1,4 +1,4 @@
-from numbaml.fit import fit, add_intercept, create_penalty_matrix
+from numbaml.fit import fit, create_penalty_matrix
 from numba import njit, float64, int64, types, prange, boolean
 from numbaml.metrics import r2_score, neg_mean_squared_error
 from numbaml.predict import predict
@@ -43,8 +43,8 @@ def find_alpha_kfolds(x, y, alphas, cv, r2):
             test_x, test_y = x[is_test], y[is_test]
             train_x, train_y = x[~is_test], y[~is_test]
 
-            coefs, intercept = fit(train_x, train_y, l2_penalty=a)
-            preds = predict(test_x, coefs, intercept)
+            weights = fit(train_x, train_y, l2_penalty=a)
+            preds = predict(test_x, weights)
 
             scores[j] = calculate_score(test_y, preds, r2)
         avg_score = np.mean(scores)
@@ -59,11 +59,10 @@ def find_alpha_kfolds(x, y, alphas, cv, r2):
 def approximate_leave_one_out_errors(x, y, l2_penalty):
     """https://medium.com/@jcatankard_76170/efficient-leave-one-out-cross-validation-f1dee3b68dfe"""
 
-    coefs, intercept = fit(x, y, l2_penalty=l2_penalty)
-    preds = predict(x, coefs, intercept)
+    weights = fit(x, y, l2_penalty=l2_penalty)
+    preds = predict(x, weights)
     residuals = y - preds
 
-    x = add_intercept(x)
     penalty = create_penalty_matrix(l2_penalty, n_features=x.shape[1])
 
     h = np.diag(x @ np.linalg.inv(x.T @ x + penalty) @ x.T)
