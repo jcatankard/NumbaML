@@ -7,6 +7,11 @@ in the regular way, as per Scikit-Learn, or for the underlying functions to be a
 
 The aim has been to reproduce the key functionality from Scikit-Learn as accurately as possible, though many options available through Scikit-Learn are not available here.
 
+### Blog posts
+1. Study into implementation of efficient leave-one-out cross validation for RidgeCV - 
+([medium.com](https://medium.com/@jcatankard_76170/efficient-leave-one-out-cross-validation-f1dee3b68dfe)).
+2. Study into parameterized calculation of confidence intervals for model parameters - 
+([medium.com](https://medium.com/@jcatankard_76170/linear-regression-parameter-confidence-intervals-228f0be5ea82)).
 
 ## Example usage:
 
