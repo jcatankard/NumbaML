@@ -73,40 +73,40 @@ A couple of extra features having been added which may be useful.
 
 #### conf_int
 1. ##### parametric approach
-Method that return confidence intervals for model parameters (intercept and coefs).
-```
-from numbaml.linear_model import Ridge
-from sklearn.datasets import make_regression
-from sklearn.model_selection import train_test_split
-
-
-X, y = make_regression()
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-model = Ridge(alpha=.9)
-model.fit(X_train, y_train)
-ci = model.conf_int(sig=0.05)
-lower, upper = ci[:, 0], ci1[:, 1]
-```
+    Method that return confidence intervals for model parameters (intercept and coefs).
+    ```
+    from numbaml.linear_model import Ridge
+    from sklearn.datasets import make_regression
+    from sklearn.model_selection import train_test_split
+    
+    
+    X, y = make_regression()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    model = Ridge(alpha=.9)
+    model.fit(X_train, y_train)
+    ci = model.conf_int(sig=0.05)
+    lower, upper = ci[:, 0], ci1[:, 1]
+    ```
 2. ##### bootstrap approach
-An alternative non-parametric approach is also available.
-The results should be close to the parametric version though not identical.
-The higher the number of bootstrap iterations, the more stable the confidence intervals.
-However increasing the order of magnitude of iterations will increase execution time.
-```
-from numbaml.linear_model import Ridge
-from sklearn.datasets import make_regression
-from sklearn.model_selection import train_test_split
-
-
-X, y = make_regression()
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-model = Ridge(alpha=.9)
-model.fit(X_train, y_train)
-ci = model.conf_int(sig=0.05, bootstrap_method=True, bootstrap_iterations=10 ** 5)
-lower, upper = ci[:, 0], ci1[:, 1]
-```
+    An alternative non-parametric approach is also available.
+    The results should be close to the parametric version though not identical.
+    The higher the number of bootstrap iterations, the more stable the confidence intervals.
+    However increasing the order of magnitude of iterations will increase execution time.
+    ```
+    from numbaml.linear_model import Ridge
+    from sklearn.datasets import make_regression
+    from sklearn.model_selection import train_test_split
+    
+    
+    X, y = make_regression()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    model = Ridge(alpha=.9)
+    model.fit(X_train, y_train)
+    ci = model.conf_int(sig=0.05, bootstrap_method=True, bootstrap_iterations=10 ** 5)
+    lower, upper = ci[:, 0], ci1[:, 1]
+    ```
 
 
 #### model_details
