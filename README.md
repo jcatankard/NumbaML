@@ -88,7 +88,7 @@ model.fit(X_train, y_train)
 ci = model.conf_int(sig=0.05)
 lower, upper = ci[:, 0], ci1[:, 1]
 ```
-##### 2. bootstrap approach
+2. ##### bootstrap approach
 An alternative non-parametric approach is also available.
 The results should be close to the parametric version though not identical.
 The higher the number of bootstrap iterations, the more stable the confidence intervals.
