@@ -1,6 +1,7 @@
 from numbaml.metrics import residual_mean_squared_error
-from numba import njit, int64, float64
+from numba import njit, int64, float64, prange
 from numbaml.predict import predict
+from numbaml.fit import fit
 from scipy import stats
 import numpy as np
 
@@ -49,7 +50,36 @@ def calculate_t_value(alpha, dof):
     return stats.t.ppf(1 - alpha / 2, dof)
 
 
-def conf_int(x, y, params, alpha):
+def conf_int_parameter_method(x, y, params, alpha):
     dof = residual_degrees_of_freedom(x)
     t_value = calculate_t_value(alpha=alpha, dof=dof)
     return parameter_confidence_intervals(x, y, params, dof, t_value).T
+
+
+@njit(float64[:, ::1](float64[:, ::1], float64), cache=True, parallel=True)
+def calculate_ci(samples, sig):
+    sig_levels = np.array([sig / 2, 1 - sig / 2]) * 100
+    samples = samples.T
+    n_features = samples.shape[0]
+    percentiles = np.zeros(shape=(n_features, 2), dtype=np.float64)
+    for i in prange(n_features):
+        percentiles[i] = np.percentile(samples[i], sig_levels)
+    return percentiles
+
+
+@njit(float64[:, ::1](float64[:, ::1], float64[::1], float64, int64), cache=True, parallel=True)
+def create_param_resamples(x, y, l2_penalty, n_iterations):
+    n_samples, n_features = x.shape
+    index_ = np.arange(n_samples)
+    samples = np.zeros(shape=(n_iterations, n_features), dtype=np.float64)
+    for i in prange(n_iterations):
+        random_index = np.random.choice(index_, n_samples, replace=True)
+        samples[i] = fit(x[random_index], y[random_index], l2_penalty)
+    return samples
+
+
+@njit(float64[:, ::1](float64[:, ::1], float64[::1], float64, float64, int64), cache=True)
+def conf_int_bootstrap_method(x, y, l2_penalty, sig, n_iterations):
+    samples = create_param_resamples(x, y, l2_penalty, n_iterations)
+    upper_lower_bounds = calculate_ci(samples, sig)
+    return upper_lower_bounds
