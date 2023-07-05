@@ -1,4 +1,4 @@
-from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo, approximate_leave_one_out_errors
+from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo, approximate_leave_one_out_errors, r2_score
 from numbaml.confidence_intervals import conf_int_parameter_method, conf_int_bootstrap_method
 from numbaml.predict import predict
 from numbaml.fit import fit
@@ -15,7 +15,8 @@ class LinearRegression:
         If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
         """
         self.fit_intercept = fit_intercept
-        self.features: List[str] = None
+        self.n_features_in_: int = None
+        self.feature_names_in_: List[str] = None
         self.coef_: npt.NDArray = None
         self.params_: npt.NDArray = None
         self.intercept_: float = None
@@ -24,7 +25,7 @@ class LinearRegression:
         self.alpha_: float = float(0)
 
     def fit(self, x, y):
-        self._assign_features(x)
+        self._assign_feature_names(x)
         self.X, self.y = self._to_numpy(x), self._to_numpy(y)
         self.X = self._add_intercept(self.X)
         self.params_ = fit(self.X, self.y, l2_penalty=self.alpha_)
@@ -46,9 +47,9 @@ class LinearRegression:
         self.intercept_ = self.params_[0] if self.fit_intercept else float(0)
         self.coef_ = self.params_[1:] if self.fit_intercept else self.params_
 
-    def _assign_features(self, x):
-        n_features = x.shape[1]
-        self.features = x.columns if hasattr(x, 'columns') else list(map(str, range(n_features)))
+    def _assign_feature_names(self, x):
+        self.n_features_in_ = x.shape[1]
+        self.feature_names_in_ = x.columns if hasattr(x, 'columns') else list(map(str, range(self.n_features_in_)))
 
     @staticmethod
     def _to_numpy(a) -> npt.NDArray:
@@ -56,7 +57,7 @@ class LinearRegression:
 
     def model_details(self) -> dict:
         m = {k: v for k, v in self.__dict__.items() if k not in ['features', 'coef_']}
-        m['coef_'] = {} if self.coef_ is None else dict(zip(self.features, self.coef_))
+        m['coef_'] = {} if self.coef_ is None else dict(zip(self.feature_names_in_, self.coef_))
         m['model'] = self.__class__
         return m
 
@@ -74,6 +75,17 @@ class LinearRegression:
             return conf_int_bootstrap_method(self.X, self.y, self.alpha_, sig, bootstrap_iterations)
         else:
             return conf_int_parameter_method(self.X, self.y, self.params_, alpha=sig)
+
+    def score(self, x, y):
+        """
+        :param x: test sample
+        :param y: true values for x
+        :return: coefficient of determination
+        """
+        x = self._to_numpy(x)
+        x = self._add_intercept(x)
+        y_pred = predict(x, self.params_)
+        return r2_score(y, y_pred)
 
 
 class Ridge(LinearRegression):
@@ -114,19 +126,19 @@ class RidgeCV(LinearRegression):
         self.cv = cv
         self.scoring = scoring
         self.r2: bool = None
-        self.gcv: bool = None
+        self.gcv: str = None
         self.alpha_: float = None
         self.best_score_: float = None
 
     def fit(self, x, y):
-        self._assign_features(x)
+        self._assign_feature_names(x)
         self._assign_cv(x.shape[0])
         self._assign_scoring(x.shape[0])
 
         self.X, self.y = self._to_numpy(x), self._to_numpy(y)
         self.X = self._add_intercept(self.X)
 
-        self.alpha_, self.best_score_ = find_alpha_loo(self.X, self.y, self.alphas) if self.gcv \
+        self.alpha_, self.best_score_ = find_alpha_loo(self.X, self.y, self.alphas) if self.gcv == 'svd' \
             else find_alpha_kfolds(self.X, self.y, self.alphas, self.cv, self.r2)
 
         self.params_ = fit(self.X, self.y, self.alpha_)
@@ -136,7 +148,7 @@ class RidgeCV(LinearRegression):
         self.cv = n_samples if self.cv is None else self.cv
         if (self.cv <= 1) | (self.cv > n_samples):
             raise ValueError('CV must be >= 2 and <= number of samples')
-        self.gcv = self.cv == n_samples
+        self.gcv = 'svd' if (self.cv == n_samples) & (n_samples > self.n_features_in_) else 'eigen'
 
     def _assign_scoring(self, n_samples: int):
         if self.scoring is None:
