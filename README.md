@@ -13,6 +13,46 @@ The aim has been to reproduce the key functionality from Scikit-Learn as accurat
 2. Study into parameterized calculation of confidence intervals for model parameters - 
 ([medium.com](https://medium.com/@jcatankard_76170/linear-regression-parameter-confidence-intervals-228f0be5ea82)).
 
+## Docs
+### LinearRegression, Ridge & RidgeCV
+#### Parameters
+ - fit_intercept: bool, default=True
+#### Attributes
+ - coef_: array of shape (n_features, )
+ - intercept_: float
+ - params_: array of shape (n_features + 1, )
+ - n_features_in_: int
+ - feature_names_in_: ndarray of shape (n_features_in_,)
+#### Methods
+ - fit(X, y)
+   - fit linear model
+ - predict(X): array, shape (n_samples,)
+   - predict using the linear model
+ - score(X, y): float
+   - return the coefficient of determination of the prediction
+   - return: float
+ - conf_int(sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000): array, shape (n_features + 1, 2)
+   - confidence intervals for each parameter including intercept
+ - model_outliers(): array, shape (n_samples,)
+   - z-score for each sample used for fitting
+
+### Ridge
+#### Parameters
+Above plus:
+ - alpha: float, default=1.0
+
+### RidgeCV
+#### Parameters
+Above plus:
+ - alphas: array-like of shape (n_alphas,), default=(0.1, 1.0, 10.0)
+ - scoring: {'r2', 'neg_mean_squared_error'}, default=None
+ - cv: int, default=None
+#### Attributes
+Above plus:
+ - alpha_: float
+ - best_score_: float
+ - gcv_mode: {‘svd’, ‘eigen’}
+
 ## Example usage:
 
 ### LinearRegression
