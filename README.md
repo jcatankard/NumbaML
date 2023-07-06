@@ -148,38 +148,43 @@ A couple of extra features having been added which may be useful.
     lower, upper = ci[:, 0], ci1[:, 1]
     ```
 
-
-#### model_details
-Using this method on a model will return a dictionary of the key model attributes
-and also making it much easier to see the coefficients along with the column name (if using Pandas DataFrame).
+#### conf_int_dict
+Return parameter estimates and confidence intervals as a dictionary that can easily been turned into a Pandas DataFrame.
+If there are feature names seen in the X variables passed to "fit", they will output in the "feature_name" column.
 ```
-model.model_details()
-```
-Example output:
-```
-{'fit_intercept': True,
-'n_features_in_': 10,
-'feature_names_in_': ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-'params_': array([-0.15692794, 94.9493805 , 72.75945281, 70.12131341, 44.14458294, 16.14937704, 10.7241133,
-                  29.59714629, 27.53633061, 27.92558347, 70.10592426
-                  ]),
-'intercept_': -0.15692793734064825,
-'alpha_': 0.1,
-'alphas': array([ 0.1,  1. , 10. ]),
-'cv': 140,
-'scoring': 'neg_mean_squared_error',
-'r2': False,
-'gcv': 'svd',
-'best_score_': -1.0806636242503618,
-'coef_': {'0': 94.94938050087862, '1': 72.75945281096875, '2': 70.12131340912383, '3': 44.144582939396216,
-          '4': 16.149377036680093, '5': 10.724113296900835, '6': 29.597146285642456, '7': 27.536330606887137,
-          '8': 27.92558346643737, '9': 70.1059242637577
-          },
-'model': <class 'numbaml.linear_model.RidgeCV'>
-}
-```
+from numbaml.linear_model import Ridge
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import make_regression
+import pandas as pd
 
 
+X, y = make_regression(random_state=2)
+
+# train
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+m = Ridge(alpha=1)
+m.fit(X_train, y_train)
+
+param_dict = m.conf_int_dict(sig=0.05, bootstrap_method=True, bootstrap_iterations=10 ** 5)
+param_df = pd.DataFrame(param_dict)
+print(param_df)
+```
+Output example:
+```
+   feature_name  lower_bound       coef  upper_bound
+0     intercept    -0.275087   0.010771     0.296628
+1             0    30.125988  30.414877    30.703765
+2             1    14.479350  14.796072    15.112795
+3             2    59.733994  60.050851    60.367707
+4             3    69.379268  69.654780    69.930292
+5             4    86.762219  87.076998    87.391777
+6             5    43.671286  43.953831    44.236375
+7             6    81.288409  81.571708    81.855008
+8             7    32.565543  32.881347    33.197150
+9             8    22.464876  22.752157    23.039439
+10            9    37.103956  37.382373    37.660790
+```
 #### model_outliers
 It is possible to detect which data points in the training data have an out-sized influence on the model
 by using leave-one-out cv. These datapoints may need investigating

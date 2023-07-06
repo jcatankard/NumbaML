@@ -20,15 +20,15 @@ class LinearRegression:
         self.coef_: npt.NDArray = None
         self.params_: npt.NDArray = None
         self.intercept_: float = None
-        self.X: npt.NDArray = None
-        self.y: npt.NDArray = None
         self.alpha_: float = float(0)
+        self._X: npt.NDArray = None
+        self._y: npt.NDArray = None
 
     def fit(self, x, y):
         self._assign_feature_names(x)
-        self.X, self.y = self._to_numpy(x), self._to_numpy(y)
-        self.X = self._add_intercept(self.X)
-        self.params_ = fit(self.X, self.y, l2_penalty=self.alpha_)
+        self._X, self._y = self._to_numpy(x), self._to_numpy(y)
+        self._X = self._add_intercept(self._X)
+        self.params_ = fit(self._X, self._y, l2_penalty=self.alpha_)
         self._assign_params()
 
     def predict(self, x) -> npt.NDArray:
@@ -55,26 +55,29 @@ class LinearRegression:
     def _to_numpy(a) -> npt.NDArray:
         return np.asarray(a, dtype=np.float64, order='C')
 
-    def model_details(self) -> dict:
-        m = {k: v for k, v in self.__dict__.items() if k not in ['features', 'coef_', 'X', 'y']}
-        m['coef_'] = {} if self.coef_ is None else dict(zip(self.feature_names_in_, self.coef_))
-        m['model'] = self.__class__
-        return m
-
     def model_outliers(self) -> npt.NDArray:
         """
         calculate error z-scores to determine which datapoints have an out-sized influence on model performance
         https://hackernoon.com/how-to-use-approximate-leave-one-out-cross-validation-to-build-better-models-vg1u35g2/
         """
-        errors = approximate_leave_one_out_errors(self.X, self.y, self.alpha_)
+        errors = approximate_leave_one_out_errors(self._X, self._y, self.alpha_)
         mean, stdev = np.mean(errors), np.std(errors)
         return (errors - mean) / stdev
 
     def conf_int(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000):
         if bootstrap_method:
-            return conf_int_bootstrap_method(self.X, self.y, self.alpha_, sig, bootstrap_iterations)
+            return conf_int_bootstrap_method(self._X, self._y, self.alpha_, sig, bootstrap_iterations)
         else:
-            return conf_int_parameter_method(self.X, self.y, self.params_, alpha=sig)
+            return conf_int_parameter_method(self._X, self._y, self.params_, alpha=sig)
+
+    def conf_int_dict(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000) -> dict:
+        conf_int = self.conf_int(sig, bootstrap_method, bootstrap_iterations).T
+        return {
+            'feature_name': ['intercept'] + self.feature_names_in_,
+            'lower_bound': conf_int[0],
+            'coef': self.params_,
+            'upper_bound': conf_int[1]
+        }
 
     def score(self, x, y):
         """
@@ -135,13 +138,13 @@ class RidgeCV(LinearRegression):
         self._assign_cv(x.shape[0])
         self._assign_scoring(x.shape[0])
 
-        self.X, self.y = self._to_numpy(x), self._to_numpy(y)
-        self.X = self._add_intercept(self.X)
+        self._X, self._y = self._to_numpy(x), self._to_numpy(y)
+        self._X = self._add_intercept(self._X)
 
-        self.alpha_, self.best_score_ = find_alpha_loo(self.X, self.y, self.alphas) if self.gcv == 'svd' \
-            else find_alpha_kfolds(self.X, self.y, self.alphas, self.cv, self.r2)
+        self.alpha_, self.best_score_ = find_alpha_loo(self._X, self._y, self.alphas) if self.gcv == 'svd' \
+            else find_alpha_kfolds(self._X, self._y, self.alphas, self.cv, self.r2)
 
-        self.params_ = fit(self.X, self.y, self.alpha_)
+        self.params_ = fit(self._X, self._y, self.alpha_)
         self._assign_params()
 
     def _assign_cv(self, n_samples: int):
