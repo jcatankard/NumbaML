@@ -32,7 +32,9 @@ The aim has been to reproduce the key functionality from Scikit-Learn as accurat
    - return the coefficient of determination of the prediction
    - return: float
  - conf_int(sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000): array, shape (n_features + 1, 2)
-   - confidence intervals for each parameter including intercept
+   - confidence intervals for each parameter (inc. intercept) including intercept
+ - conf_int_dict(sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000): dict
+   - returns feature names (inc. intercept) with coef values + confidence intervals in a dict that can be transformed into a dataframe
  - model_outliers(): array, shape (n_samples,)
    - z-score for each sample used for fitting
 
