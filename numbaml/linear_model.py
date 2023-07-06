@@ -56,7 +56,7 @@ class LinearRegression:
         return np.asarray(a, dtype=np.float64, order='C')
 
     def model_details(self) -> dict:
-        m = {k: v for k, v in self.__dict__.items() if k not in ['features', 'coef_']}
+        m = {k: v for k, v in self.__dict__.items() if k not in ['features', 'coef_', 'X', 'y']}
         m['coef_'] = {} if self.coef_ is None else dict(zip(self.feature_names_in_, self.coef_))
         m['model'] = self.__class__
         return m

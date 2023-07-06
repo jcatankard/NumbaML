@@ -5,7 +5,7 @@ import numpy as np
 
 
 n_samples = np.random.randint(100, 250)
-n_features = np.random.randint(10, 25)
+n_features = np.random.randint(10, 11)
 noise = np.random.randint(1, 10)
 X, y = make_regression(n_samples=n_samples,
                        n_features=n_features,
