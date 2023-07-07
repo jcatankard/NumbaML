@@ -2,10 +2,10 @@
 
 This implementation aims to recreate LinearRegression, Ridge & RidgeCV using Scikit-Learn as a benchmark to evaluate that equality of output.
 
-The classes, built in regular Python, act as wrappers for the underlying Numba functions. This allows models to be used
-in the regular way, as per Scikit-Learn, or for the underlying functions to be accessed as part of Numba workflow without having to leave the Numba ecosystem.
+The classes act as Python wrappers for the underlying Numba functions. This allows models to be used
+exactly like Scikit-Learn or for the underlying functions to be accessed as part of Numba workflow without having to leave the Numba ecosystem.
 
-The aim has been to reproduce the key functionality from Scikit-Learn as accurately as possible, though many options available through Scikit-Learn are not available here.
+The aim has been to reproduce the key functionality from Scikit-Learn as accurately as possible.
 
 ### Blog posts
 1. Study into implementation of efficient leave-one-out cross validation for RidgeCV - 
