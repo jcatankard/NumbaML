@@ -15,12 +15,9 @@ if __name__ == '__main__':
     gap1 = ci[:, 1] - ci[:, 0]
     print(params.round(2))
 
-
     ci = m.conf_int(sig=significance_level)
     params = np.vstack((ci[:, 0], m.params_, ci[:, 1])).T
     gap2 = ci[:, 1] - ci[:, 0]
     print(params.round(2))
 
     print(np.stack([gap1, gap2]).T.round(2))
-
-

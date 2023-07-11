@@ -30,7 +30,6 @@ if __name__ == '__main__':
                                alpha_cv, score_cv, time_cv,
                                alpha_gcv, score_gcv, time_gcv
                                ])
-
     results = pd.DataFrame(
         data=results,
         columns=['n_samples', 'n_features', 'noise',
