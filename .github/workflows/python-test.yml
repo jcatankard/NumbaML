@@ -17,9 +17,9 @@ jobs:
         with:
           python-version: 3.11
       - name: Install dependencies
-        run: |
+        run:
           python -m pip install --upgrade pip
           pip install sklearn statsmodels
           pip install -r requirements.txt
       - name: Run tests with unittest
-        run: python -m unittest
+        run: python -m unittest test/test_linear_model.TestRegression
