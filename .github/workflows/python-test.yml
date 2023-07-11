@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run:
           python -m pip install --upgrade pip
-          pip install sklearn statsmodels
+          pip install scikit-learn statsmodels
           pip install -r requirements.txt
       - name: Run tests with unittest
-        run: python -m unittest test\test_linear_model.py
+        run: python -m unittest tests\test_linear_model.py
