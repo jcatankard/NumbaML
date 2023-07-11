@@ -155,7 +155,6 @@ Return parameter estimates and confidence intervals as a dictionary that can eas
 If there are feature names seen in the X variables passed to "fit", they will output in the "feature_name" column.
 ```
 from numbaml.linear_model import Ridge
-from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_regression
 import pandas as pd
@@ -194,37 +193,22 @@ and if necessary removed from the training data before re-fitting.
 
 ```
 from numbaml.linear_model import Ridge
-from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_regression
 import numpy as np
 
 
 X, y = make_regression(random_state=2)
-
-# train
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
 m = Ridge(alpha=1)
 m.fit(X_train, y_train)
-
-# evaluate
 preds = m.predict(X_test)
-print('original mse:', round(mean_squared_error(y_test, preds), 4))
 
 # flag outliers
 z_scores = m.model_outliers()
 z_threshold = 4
 outliers = np.abs(z_scores) > z_threshold
 print('number of outliers:', z_scores[outliers].size, 'out of:', z_scores.size)
-
-# re-train
-X_train, y_train = X_train[~outliers], y_train[~outliers]
-m = Ridge(alpha=1)
-m.fit(X_train, y_train)
-z_scores = m.model_outliers()
-
-# evaluate
-preds = m.predict(X_test)
-print('new mse:', round(mean_squared_error(y_test, preds), 4))
 
 ```
