@@ -22,4 +22,4 @@ jobs:
           pip install sklearn statsmodels
           pip install -r requirements.txt
       - name: Run tests with unittest
-        run: python -m unittest test_linear_model.TestRegression
+        run: python -m unittest
