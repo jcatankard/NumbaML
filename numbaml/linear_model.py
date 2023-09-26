@@ -7,7 +7,7 @@ from typing import List
 import numpy as np
 
 
-class LinearRegression:
+class BaseModel:
     """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html"""
     def __init__(self, fit_intercept: bool = True):
         """
@@ -31,12 +31,12 @@ class LinearRegression:
         self.params_ = fit(self._X, self._y, l2_penalty=self.alpha_)
         self._assign_params()
 
-    def predict(self, x) -> npt.NDArray:
+    def predict(self, x) -> npt.NDArray[np.float64]:
         x = self._to_numpy(x)
         x = self._add_intercept(x)
         return predict(x, self.params_)
 
-    def _add_intercept(self, x: npt.NDArray) -> npt.NDArray:
+    def _add_intercept(self, x: npt.NDArray) -> npt.NDArray[np.float64]:
         if self.fit_intercept:
             n_samples = x.shape[0]
             intercept = np.ones((n_samples, 1), dtype=np.float64)
@@ -52,19 +52,30 @@ class LinearRegression:
         self.feature_names_in_ = x.columns if hasattr(x, 'columns') else list(map(str, range(self.n_features_in_)))
 
     @staticmethod
-    def _to_numpy(a) -> npt.NDArray:
+    def _to_numpy(a) -> npt.NDArray[np.float64]:
         return np.asarray(a, dtype=np.float64, order='C')
 
-    def model_outliers(self) -> npt.NDArray:
+    def score(self, x, y) -> float:
         """
-        calculate error z-scores to determine which datapoints have an out-sized influence on model performance
-        https://hackernoon.com/how-to-use-approximate-leave-one-out-cross-validation-to-build-better-models-vg1u35g2/
+        :param x: test sample
+        :param y: true values for x
+        :return: coefficient of determination
         """
-        errors = approximate_leave_one_out_errors(self._X, self._y, self.alpha_)
-        mean, stdev = np.mean(errors), np.std(errors)
-        return (errors - mean) / stdev
+        x = self._to_numpy(x)
+        x = self._add_intercept(x)
+        y_pred = predict(x, self.params_)
+        return r2_score(y, y_pred)
 
-    def conf_int(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000):
+class LinearRegression(BaseModel):
+    """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html"""
+    def __init__(self, fit_intercept: bool = True):
+        """
+        :param fit_intercept: Whether to calculate the intercept for this model.
+        If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
+        """
+        super().__init__(fit_intercept=fit_intercept)
+
+    def conf_int(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000) -> npt.NDArray[np.float64]:
         if bootstrap_method:
             return conf_int_bootstrap_method(self._X, self._y, self.alpha_, sig, bootstrap_iterations)
         else:
@@ -79,19 +90,8 @@ class LinearRegression:
             'upper_bound': conf_int[1]
         }
 
-    def score(self, x, y):
-        """
-        :param x: test sample
-        :param y: true values for x
-        :return: coefficient of determination
-        """
-        x = self._to_numpy(x)
-        x = self._add_intercept(x)
-        y_pred = predict(x, self.params_)
-        return r2_score(y, y_pred)
 
-
-class Ridge(LinearRegression):
+class Ridge(BaseModel):
     """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html#sklearn.linear_model.Ridge"""
 
     def __init__(self, alpha: float = 1., fit_intercept: bool = True):
@@ -104,7 +104,7 @@ class Ridge(LinearRegression):
         self.alpha_: float = float(alpha)
 
 
-class RidgeCV(LinearRegression):
+class RidgeCV(BaseModel):
     """scikit-learn.org/stable/modules/generated/sklearn.numbaml.RidgeCV.html#sklearn.numbaml.RidgeCV"""
 
     def __init__(self, alphas: List[float] = (0.1, 1.0, 10.0), cv: int = None, scoring: str = None,

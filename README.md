@@ -31,12 +31,13 @@ The aim has been to reproduce the key functionality from Scikit-Learn as accurat
  - score(X, y): float
    - return the coefficient of determination of the prediction
    - return: float
+
+### LinearRegression
+#### Methods
  - conf_int(sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000): array, shape (n_features + 1, 2)
    - confidence intervals for each parameter (inc. intercept) including intercept
  - conf_int_dict(sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000): dict
    - returns feature names (inc. intercept) with coef values + confidence intervals in a dict that can be transformed into a dataframe
- - model_outliers(): array, shape (n_samples,)
-   - z-score for each sample used for fitting
 
 ### Ridge
 #### Parameters
@@ -117,7 +118,7 @@ A couple of extra features having been added which may be useful.
 1. ##### parametric approach
     Method that return confidence intervals for model parameters (intercept and coefs).
     ```
-    from numbaml.linear_model import Ridge
+    from numbaml.linear_model import LinearRegression
     from sklearn.datasets import make_regression
     from sklearn.model_selection import train_test_split
     
@@ -125,7 +126,7 @@ A couple of extra features having been added which may be useful.
     X, y = make_regression()
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    model = Ridge(alpha=.9)
+    model = LinearRegression()
     model.fit(X_train, y_train)
     ci = model.conf_int(sig=0.05)
     lower, upper = ci[:, 0], ci1[:, 1]
@@ -136,7 +137,7 @@ A couple of extra features having been added which may be useful.
     The higher the number of bootstrap iterations, the more stable the confidence intervals.
     However increasing the order of magnitude of iterations will increase execution time.
     ```
-    from numbaml.linear_model import Ridge
+    from numbaml.linear_model import LinearRegression
     from sklearn.datasets import make_regression
     from sklearn.model_selection import train_test_split
     
@@ -144,7 +145,7 @@ A couple of extra features having been added which may be useful.
     X, y = make_regression()
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    model = Ridge(alpha=.9)
+    model = LinearRegression()
     model.fit(X_train, y_train)
     ci = model.conf_int(sig=0.05, bootstrap_method=True, bootstrap_iterations=10 ** 5)
     lower, upper = ci[:, 0], ci1[:, 1]
@@ -154,7 +155,7 @@ A couple of extra features having been added which may be useful.
 Return parameter estimates and confidence intervals as a dictionary that can easily been turned into a Pandas DataFrame.
 If there are feature names seen in the X variables passed to "fit", they will output in the "feature_name" column.
 ```
-from numbaml.linear_model import Ridge
+from numbaml.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_regression
 import pandas as pd
@@ -164,7 +165,7 @@ X, y = make_regression(random_state=2)
 
 # train
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-m = Ridge(alpha=1)
+m = LinearRegression()
 m.fit(X_train, y_train)
 
 param_dict = m.conf_int_dict(sig=0.05, bootstrap_method=True, bootstrap_iterations=10 ** 5)
@@ -185,30 +186,4 @@ Output example:
 8             7    32.565543  32.881347    33.197150
 9             8    22.464876  22.752157    23.039439
 10            9    37.103956  37.382373    37.660790
-```
-#### model_outliers
-It is possible to detect which data points in the training data have an out-sized influence on the model
-by using leave-one-out cv. These datapoints may need investigating
-and if necessary removed from the training data before re-fitting. 
-
-```
-from numbaml.linear_model import Ridge
-from sklearn.model_selection import train_test_split
-from sklearn.datasets import make_regression
-import numpy as np
-
-
-X, y = make_regression(random_state=2)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-m = Ridge(alpha=1)
-m.fit(X_train, y_train)
-preds = m.predict(X_test)
-
-# flag outliers
-z_scores = m.model_outliers()
-z_threshold = 4
-outliers = np.abs(z_scores) > z_threshold
-print('number of outliers:', z_scores[outliers].size, 'out of:', z_scores.size)
-
 ```
