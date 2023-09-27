@@ -46,13 +46,13 @@ def parameter_confidence_intervals(x, y, weights, dof, t_value):
     return np.stack((weights - gap, weights + gap))
 
 
-def calculate_t_value(alpha, dof):
-    return stats.t.ppf(1 - alpha / 2, dof)
+def calculate_t_value(sig, dof):
+    return stats.t.ppf(1 - sig / 2, dof)
 
 
-def conf_int_parameter_method(x, y, params, alpha):
+def conf_int_parameter_method(x, y, params, sig):
     dof = residual_degrees_of_freedom(x)
-    t_value = calculate_t_value(alpha=alpha, dof=dof)
+    t_value = calculate_t_value(sig=sig, dof=dof)
     return parameter_confidence_intervals(x, y, params, dof, t_value).T
 
 
@@ -67,19 +67,20 @@ def calculate_ci(samples, sig):
     return percentiles
 
 
-@njit(float64[:, ::1](float64[:, ::1], float64[::1], float64, int64), cache=True, parallel=True)
-def create_param_resamples(x, y, l2_penalty, n_iterations):
+@njit(float64[:, ::1](float64[:, ::1], float64[::1], int64), cache=True, parallel=True)
+def create_param_resamples(x, y, n_iterations):
     n_samples, n_features = x.shape
     index_ = np.arange(n_samples)
     samples = np.zeros(shape=(n_iterations, n_features), dtype=np.float64)
     for i in prange(n_iterations):
         random_index = np.random.choice(index_, n_samples, replace=True)
-        samples[i] = fit(x[random_index], y[random_index], l2_penalty)
+        # l2 penalty always 0 as conf intervals for OLS only - fit intercept has no affect if l2 penalty=0
+        samples[i] = fit(x[random_index], y[random_index], np.float64(0), True)
     return samples
 
 
-@njit(float64[:, ::1](float64[:, ::1], float64[::1], float64, float64, int64), cache=True)
-def conf_int_bootstrap_method(x, y, l2_penalty, sig, n_iterations):
-    samples = create_param_resamples(x, y, l2_penalty, n_iterations)
+@njit(float64[:, ::1](float64[:, ::1], float64[::1], float64, int64), cache=True)
+def conf_int_bootstrap_method(x, y, sig, n_iterations):
+    samples = create_param_resamples(x, y, n_iterations)
     upper_lower_bounds = calculate_ci(samples, sig)
     return upper_lower_bounds

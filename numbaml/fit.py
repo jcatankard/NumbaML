@@ -29,7 +29,7 @@ def fit(x, y, l2_penalty, fit_intercept):
     :param x: independent variables
     :param y: dependent target
     :param l2_penalty: regularization penalty
-    :param fit_intercept: if intercept is needed
+    :param fit_intercept: if l2 penalty is 0, this has no impact
     :return: coefficients, intercept
     """
     penalty = create_penalty_matrix(l2_penalty, x.shape[1], fit_intercept)

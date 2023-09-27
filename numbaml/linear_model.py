@@ -77,9 +77,9 @@ class LinearRegression(BaseModel):
 
     def conf_int(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000) -> npt.NDArray[np.float64]:
         if bootstrap_method:
-            return conf_int_bootstrap_method(self._X, self._y, self.alpha_, sig, bootstrap_iterations)
+            return conf_int_bootstrap_method(self._X, self._y, sig, bootstrap_iterations)
         else:
-            return conf_int_parameter_method(self._X, self._y, self.params_, alpha=sig)
+            return conf_int_parameter_method(self._X, self._y, self.params_, sig)
 
     def conf_int_dict(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000) -> dict:
         conf_int = self.conf_int(sig, bootstrap_method, bootstrap_iterations).T
