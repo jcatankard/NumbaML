@@ -24,9 +24,9 @@ def calculate_score(y_true, y_pred, r2):
     return r2_score(y_true, y_pred) if r2 else neg_mean_squared_error(y_true, y_pred)
 
 
-@njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1], int64, boolean),
+@njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1], boolean, int64, boolean),
       parallel=True, cache=True)
-def find_alpha_kfolds(x, y, alphas, cv, r2):
+def find_alpha_kfolds(x, y, alphas, fit_intercept, cv, r2):
     n_samples, n_features = x.shape
 
     best_score = -np.inf
@@ -43,7 +43,7 @@ def find_alpha_kfolds(x, y, alphas, cv, r2):
             test_x, test_y = x[is_test], y[is_test]
             train_x, train_y = x[~is_test], y[~is_test]
 
-            weights = fit(train_x, train_y, l2_penalty=a)
+            weights = fit(train_x, train_y, a, fit_intercept)
             preds = predict(test_x, weights)
 
             scores[j] = calculate_score(test_y, preds, r2)
@@ -55,26 +55,26 @@ def find_alpha_kfolds(x, y, alphas, cv, r2):
     return best_alpha, best_score
 
 
-@njit(float64[::1](float64[:, ::1], float64[::1], float64), cache=True)
-def approximate_leave_one_out_errors(x, y, l2_penalty):
+@njit(float64[::1](float64[:, ::1], float64[::1], float64, boolean), cache=True)
+def approximate_leave_one_out_errors(x, y, l2_penalty, fit_intercept):
     """https://medium.com/@jcatankard_76170/efficient-leave-one-out-cross-validation-f1dee3b68dfe"""
 
-    weights = fit(x, y, l2_penalty=l2_penalty)
+    weights = fit(x, y, l2_penalty, fit_intercept)
     preds = predict(x, weights)
     residuals = y - preds
 
-    penalty = create_penalty_matrix(l2_penalty, n_features=x.shape[1])
+    penalty = create_penalty_matrix(l2_penalty, x.shape[1], fit_intercept)
 
     h = np.diag(x @ np.linalg.inv(x.T @ x + penalty) @ x.T)
     return residuals / (1 - h)
 
 
-@njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1]), parallel=True, cache=True)
-def find_alpha_loo(x, y, alphas):
+@njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1], boolean), parallel=True, cache=True)
+def find_alpha_loo(x, y, alphas, fit_intercept):
 
     all_scores = np.zeros(alphas.size, dtype=np.float64)
     for i in prange(alphas.size):
-        errors = approximate_leave_one_out_errors(x, y, l2_penalty=alphas[i])
+        errors = approximate_leave_one_out_errors(x, y, alphas[i], fit_intercept)
         # calculate neg mean squared error
         all_scores[i] = - np.mean(errors ** 2)
 

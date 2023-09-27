@@ -1,18 +1,18 @@
-from numba import njit, int64, float64
+from numba import njit, int64, float64, boolean
 import numpy as np
 
 
-@njit(float64[:, ::1](float64, int64), cache=True)
-def create_penalty_matrix(l2_penalty, n_features):
+@njit(float64[:, ::1](float64, int64, boolean), cache=True)
+def create_penalty_matrix(l2_penalty, n_features, fit_intercept):
     """n_features includes intercept"""
     identity = np.identity(n_features)
     # set top corner to zero as we don't penalize intercept
-    identity[0][0] = 0
+    identity[0][0] = 0 if fit_intercept else 1
     return l2_penalty * identity
 
 
-@njit(float64[::1](float64[:, ::1], float64[::1], float64), cache=True)
-def fit(x, y, l2_penalty):
+@njit(float64[::1](float64[:, ::1], float64[::1], float64, boolean), cache=True)
+def fit(x, y, l2_penalty, fit_intercept):
     """
     Solution 1 (solve regression formula for B)
     solve for B: y = X.B -> Xt.y = (Xt.X).B -> Xt.(Xt.X)^-1.y = (Xt.X).(Xt.X)^-1.B = I.B = B
@@ -29,8 +29,9 @@ def fit(x, y, l2_penalty):
     :param x: independent variables
     :param y: dependent target
     :param l2_penalty: regularization penalty
+    :param fit_intercept: if intercept is needed
     :return: coefficients, intercept
     """
-    penalty = create_penalty_matrix(l2_penalty, n_features=x.shape[1])
+    penalty = create_penalty_matrix(l2_penalty, x.shape[1], fit_intercept)
     weights = np.linalg.inv(x.T @ x + penalty) @ x.T @ y
     return weights

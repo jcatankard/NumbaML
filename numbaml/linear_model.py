@@ -1,5 +1,5 @@
-from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo, approximate_leave_one_out_errors, r2_score
 from numbaml.confidence_intervals import conf_int_parameter_method, conf_int_bootstrap_method
+from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo, r2_score
 from numbaml.predict import predict
 from numbaml.fit import fit
 import numpy.typing as npt
@@ -9,10 +9,10 @@ import numpy as np
 
 class BaseModel:
     """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html"""
-    def __init__(self, fit_intercept: bool = True):
+    def __init__(self, alpha: float = None, fit_intercept: bool = True):
         """
         :param fit_intercept: Whether to calculate the intercept for this model.
-        If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
+            If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
         """
         self.fit_intercept = fit_intercept
         self.n_features_in_: int = None
@@ -20,7 +20,7 @@ class BaseModel:
         self.coef_: npt.NDArray = None
         self.params_: npt.NDArray = None
         self.intercept_: float = None
-        self.alpha_: float = float(0)
+        self.alpha_: float = alpha
         self._X: npt.NDArray = None
         self._y: npt.NDArray = None
 
@@ -28,7 +28,7 @@ class BaseModel:
         self._assign_feature_names(x)
         self._X, self._y = self._to_numpy(x), self._to_numpy(y)
         self._X = self._add_intercept(self._X)
-        self.params_ = fit(self._X, self._y, l2_penalty=self.alpha_)
+        self.params_ = fit(self._X, self._y, l2_penalty=self.alpha_, fit_intercept=self.fit_intercept)
         self._assign_params()
 
     def predict(self, x) -> npt.NDArray[np.float64]:
@@ -71,9 +71,9 @@ class LinearRegression(BaseModel):
     def __init__(self, fit_intercept: bool = True):
         """
         :param fit_intercept: Whether to calculate the intercept for this model.
-        If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
+            If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
         """
-        super().__init__(fit_intercept=fit_intercept)
+        super().__init__(alpha=0, fit_intercept=fit_intercept)
 
     def conf_int(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000) -> npt.NDArray[np.float64]:
         if bootstrap_method:
@@ -98,10 +98,9 @@ class Ridge(BaseModel):
         """
         :param alpha: l2 penalization.
         :param fit_intercept: Whether to calculate the intercept for this model.
-        If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
+            If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
         """
-        super().__init__(fit_intercept=fit_intercept)
-        self.alpha_: float = float(alpha)
+        super().__init__(alpha=float(alpha), fit_intercept=fit_intercept)
 
 
 class RidgeCV(BaseModel):
@@ -118,11 +117,11 @@ class RidgeCV(BaseModel):
             None, to use the efficient Leave-One-Out cross-validation
             integer, to specify the number of folds.
         :param scoring: If None, the negative mean squared error if cv is None
-        (i.e. when using leave-one-out cross-validation) and r2 score otherwise.
+            (i.e. when using leave-one-out cross-validation) and r2 score otherwise.
             'r2' for (coefficient of determination) regression score
             'neg_mean_squared_error' for the negative mean squared error
         :param fit_intercept: Whether to calculate the intercept for this model.
-        If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
+            If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
         """
         super().__init__(fit_intercept=fit_intercept)
         self.alphas = np.array(alphas, dtype=np.float64)
@@ -130,7 +129,6 @@ class RidgeCV(BaseModel):
         self.scoring = scoring
         self.r2: bool = None
         self.gcv: str = None
-        self.alpha_: float = None
         self.best_score_: float = None
 
     def fit(self, x, y):
@@ -141,10 +139,10 @@ class RidgeCV(BaseModel):
         self._X, self._y = self._to_numpy(x), self._to_numpy(y)
         self._X = self._add_intercept(self._X)
 
-        self.alpha_, self.best_score_ = find_alpha_loo(self._X, self._y, self.alphas) if self.gcv == 'svd' \
-            else find_alpha_kfolds(self._X, self._y, self.alphas, self.cv, self.r2)
+        self.alpha_, self.best_score_ = find_alpha_loo(self._X, self._y, self.alphas, self.fit_intercept)\
+            if self.gcv == 'svd' else find_alpha_kfolds(self._X, self._y, self.alphas, self.fit_intercept, self.cv, self.r2)
 
-        self.params_ = fit(self._X, self._y, self.alpha_)
+        self.params_ = fit(self._X, self._y, self.alpha_, self.fit_intercept)
         self._assign_params()
 
     def _assign_cv(self, n_samples: int):

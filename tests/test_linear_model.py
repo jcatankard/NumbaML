@@ -28,9 +28,10 @@ class TestRegression(unittest.TestCase):
         print('        test .score')
         self.assertAlmostEqual(model1.score(x, y), model2.score(x, y), places=self.places)
 
-    def ci_test(self, model, x, y):
+    def ci_test(self, model, x, y, fit_intercept):
         print('        test .conf_int')
-        m3 = sm.OLS(y, sm.add_constant(x))
+        x = sm.add_constant(x) if fit_intercept else x
+        m3 = sm.OLS(y, x)
         r3 = m3.fit()
         sig = np.random.choice([0.01, 0.025, 0.05, 0.1], size=None)
         ci1 = model.conf_int(sig=sig, bootstrap_method=False)
@@ -57,6 +58,12 @@ class TestRegression(unittest.TestCase):
         if self.print_:
             print(f'cv = {cv}')
         return cv
+
+    def select_fit_intercept(self) -> bool:
+        fit_intercept = np.random.choice([True, False])
+        if self.print_:
+            print(f'fit_intercept = {fit_intercept}')
+        return fit_intercept
 
     def create_data(self):
         n_samples = np.random.randint(self.min_samples, self.max_samples)
@@ -88,27 +95,31 @@ class TestRegression(unittest.TestCase):
         for i in range(self.n_tests):
             print(f'    test {i + 1}')
             x, y = self.create_data()
-            m1, m2 = self.fit_models(x, y, numbaml.linear_model.LinearRegression, LinearRegression, kwargs={})
+            kwargs = {'fit_intercept': self.select_fit_intercept()}
+            m1, m2 = self.fit_models(x, y, numbaml.linear_model.LinearRegression, LinearRegression, kwargs=kwargs)
             self.common_tests(m1, m2, x, y)
-            self.ci_test(m1, x, y)
+            self.ci_test(m1, x, y, kwargs['fit_intercept'])
 
     def test_ridge(self):
         print('testing Ridge')
         for i in range(self.n_tests):
             print(f'    test {i + 1}')
             x, y = self.create_data()
-            m1, m2 = self.fit_models(x, y, numbaml.linear_model.Ridge, Ridge, kwargs={'alpha': self.select_alphas(1)})
+            kwargs = {'alpha': self.select_alphas(1), 'fit_intercept': self.select_fit_intercept()}
+            m1, m2 = self.fit_models(x, y, numbaml.linear_model.Ridge, Ridge, kwargs=kwargs)
             self.common_tests(m1, m2, x, y)
 
     def test_ridgecv(self):
         print('testing RidgeCV')
         for i in range(self.n_tests):
             print(f'    test {i + 1}')
-
             x, y = self.create_data()
             cv = self.select_cv()
-            scoring = self.select_scoring(cv)
-            kwargs = {'alphas': self.select_alphas(np.random.randint(2, 10)), 'scoring': scoring, 'cv': cv}
+            kwargs = {'alphas': self.select_alphas(np.random.randint(2, 10)),
+                      'scoring': self.select_scoring(cv),
+                      'cv': cv,
+                      'fit_intercept': self.select_fit_intercept()
+                      }
             m1, m2 = self.fit_models(x, y, numbaml.linear_model.RidgeCV, RidgeCV, kwargs=kwargs)
 
             self.common_tests(m1, m2, x, y)
