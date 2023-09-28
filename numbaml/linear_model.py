@@ -26,7 +26,7 @@ class BaseModel:
 
     def fit(self, x, y):
         self._assign_feature_names(x)
-        self._X, self._y = self._to_numpy(x), self._to_numpy(y)
+        self._X, self._y = self._to_numpy(x), self._to_numpy(y).flatten()
         self._X = self._add_intercept(self._X)
         self.params_ = fit(self._X, self._y, l2_penalty=self.alpha_, fit_intercept=self.fit_intercept)
         self._assign_params()
