@@ -49,7 +49,7 @@ class BaseModel:
 
     def _assign_feature_names(self, x):
         self.n_features_in_ = x.shape[1]
-        self.feature_names_in_ = x.columns if hasattr(x, 'columns') else list(map(str, range(self.n_features_in_)))
+        self.feature_names_in_ = list(x.columns) if hasattr(x, 'columns') else list(map(str, range(self.n_features_in_)))
 
     @staticmethod
     def _to_numpy(a) -> npt.NDArray[np.float64]:
@@ -83,8 +83,9 @@ class LinearRegression(BaseModel):
 
     def conf_int_dict(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000) -> dict:
         conf_int = self.conf_int(sig, bootstrap_method, bootstrap_iterations).T
+        names = ['intercept'] + self.feature_names_in_ if self.fit_intercept else self.feature_names_in_
         return {
-            'feature_name': ['intercept'] + self.feature_names_in_,
+            'feature_name': names,
             'lower_bound': conf_int[0],
             'coef': self.params_,
             'upper_bound': conf_int[1]

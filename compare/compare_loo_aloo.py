@@ -18,12 +18,13 @@ if __name__ == '__main__':
                                n_features=n_features,
                                noise=noise
                                )
+        fit_intercept = True
         start_cv = time.time()
-        alpha_cv, score_cv = find_alpha_kfolds(X, y, alphas, cv=n_samples, r2=False)
+        alpha_cv, score_cv = find_alpha_kfolds(X, y, alphas, cv=n_samples, r2=False, fit_intercept=fit_intercept)
         time_cv = time.time() - start_cv
 
         start_gcv = time.time()
-        alpha_gcv, score_gcv = find_alpha_loo(X, y, alphas)
+        alpha_gcv, score_gcv = find_alpha_loo(X, y, alphas, fit_intercept=fit_intercept)
         time_gcv = time.time() - start_gcv
 
         results[i] = np.array([n_samples, n_features, noise,
