@@ -45,7 +45,7 @@ class BaseModel:
         return x
 
     def _assign_params(self):
-        self.intercept_ = np.float64(self.params_[0] if self.fit_intercept else 0)
+        self.intercept_ = self.params_[0] if self.fit_intercept else np.float64(0)
         coef_ = self.params_[1:] if self.fit_intercept else self.params_
         self.coef_ = coef_.flatten() if coef_.shape[1] == 1 else coef_.T
 
