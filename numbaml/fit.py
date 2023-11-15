@@ -11,7 +11,7 @@ def create_penalty_matrix(l2_penalty, n_features, fit_intercept):
     return l2_penalty * identity
 
 
-@njit(float64[::1](float64[:, ::1], float64[::1], float64, boolean), cache=True)
+@njit(float64[:, ::1](float64[:, ::1], float64[:, ::1], float64, boolean), cache=True)
 def fit(x, y, l2_penalty, fit_intercept):
     """
     Solution 1 (solve regression formula for B)
@@ -34,4 +34,4 @@ def fit(x, y, l2_penalty, fit_intercept):
     """
     penalty = create_penalty_matrix(l2_penalty, x.shape[1], fit_intercept)
     weights = np.linalg.inv(x.T @ x + penalty) @ x.T @ y
-    return weights
+    return weights.reshape(x.shape[1], y.shape[1])

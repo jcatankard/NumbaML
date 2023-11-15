@@ -23,11 +23,9 @@ class TestRegression(unittest.TestCase):
         print('        test .coef_')
         np.testing.assert_allclose(model1.coef_, model2.coef_, atol=self.atol, rtol=self.rtol)
         print('        test .intercept_')
-        self.assertAlmostEqual(model1.intercept_, model2.intercept_, places=self.places)
+        np.testing.assert_allclose(model1.intercept_, model2.intercept_, atol=self.atol, rtol=self.rtol)
         print('        test .n_features_in_')
         np.testing.assert_allclose(model1.n_features_in_, model2.n_features_in_, atol=self.atol, rtol=self.rtol)
-        print('        test .score')
-        self.assertAlmostEqual(model1.score(x, y), model2.score(x, y), places=self.places)
 
     def ci_test(self, model, x, y, fit_intercept):
         print('        test .conf_int')
@@ -42,6 +40,10 @@ class TestRegression(unittest.TestCase):
     def alpha_test(self, model1, model2):
         print('        test .alpha_')
         self.assertEqual(model1.alpha_, model2.alpha_)
+
+    def score_test(self, model1, model2, x, y):
+        print('        test .score')
+        self.assertAlmostEqual(model1.score(x, y), model2.score(x, y), places=self.places)
 
     def best_score_test(self, model1, model2):
         print('        test .best_score_')
@@ -61,12 +63,12 @@ class TestRegression(unittest.TestCase):
     def select_fit_intercept() -> bool:
         return np.random.choice([True, False])
 
-    def create_data(self) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    def create_data(self, n_targets: int = 1) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         n_samples = np.random.randint(self.min_samples, self.max_samples)
         max_features = 100 if n_samples // 2 > 100 else n_samples // 2
         n_features = np.random.randint(1, max_features)
         noise = np.random.randint(10, 100)
-        return make_regression(n_samples=n_samples, n_features=n_features, noise=noise)
+        return make_regression(n_samples=n_samples, n_features=n_features, noise=noise, n_targets=n_targets)
 
     @staticmethod
     def select_alphas(n_alphas: int) -> npt.NDArray[np.float64]:
@@ -90,6 +92,7 @@ class TestRegression(unittest.TestCase):
             kwargs = {'fit_intercept': self.select_fit_intercept()}
             m1, m2 = self.fit_models(x, y, numbaml.linear_model.LinearRegression, LinearRegression, kwargs=kwargs)
             self.common_tests(m1, m2, x, y)
+            self.score_test(m1, m2, x, y)
             self.ci_test(m1, x, y, kwargs['fit_intercept'])
 
     def test_ridge(self):
@@ -100,6 +103,7 @@ class TestRegression(unittest.TestCase):
             kwargs = {'alpha': self.select_alphas(1), 'fit_intercept': self.select_fit_intercept()}
             m1, m2 = self.fit_models(x, y, numbaml.linear_model.Ridge, Ridge, kwargs=kwargs)
             self.common_tests(m1, m2, x, y)
+            self.score_test(m1, m2, x, y)
 
     def test_ridgecv(self):
         print('testing RidgeCV')
@@ -113,7 +117,16 @@ class TestRegression(unittest.TestCase):
                       'fit_intercept': self.select_fit_intercept()
                       }
             m1, m2 = self.fit_models(x, y, numbaml.linear_model.RidgeCV, RidgeCV, kwargs=kwargs)
-
             self.common_tests(m1, m2, x, y)
+            self.score_test(m1, m2, x, y)
             self.alpha_test(m1, m2)
             self.best_score_test(m1, m2)
+
+    def test_multivariate(self):
+        print('testing multivariate')
+        for i in range(self.n_tests):
+            print(f'    test {i + 1}')
+            x, y = self.create_data(n_targets=2)#np.random.randint(2, 10))
+            kwargs = {'fit_intercept': self.select_fit_intercept()}
+            m1, m2 = self.fit_models(x, y, numbaml.linear_model.LinearRegression, LinearRegression, kwargs=kwargs)
+            self.common_tests(m1, m2, x, y)

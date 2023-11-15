@@ -18,9 +18,9 @@ The aim has been to reproduce the key functionality from Scikit-Learn as accurat
 #### Parameters
  - fit_intercept: bool, default=True
 #### Attributes
- - coef_: array of shape (n_features, )
- - intercept_: float
- - params_: array of shape (n_features + 1, )
+ - coef_: array of shape (n_features, ) or (n_targets, n_features)
+ - intercept_: float or array of shape (n_targets,)
+ - params_: array of shape (n_features + 1, ) or (n_targets, n_features)
  - n_features_in_: int
  - feature_names_in_: ndarray of shape (n_features_in_,)
 #### Methods

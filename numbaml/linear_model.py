@@ -26,7 +26,7 @@ class BaseModel:
 
     def fit(self, x, y):
         self._assign_feature_names(x)
-        self._X, self._y = self._to_numpy(x), self._to_numpy(y).flatten()
+        self._X, self._y = self._to_numpy(x), self._to_numpy(y).reshape(x.shape[0], -1)
         self._X = self._add_intercept(self._X)
         self.params_ = fit(self._X, self._y, l2_penalty=self.alpha_, fit_intercept=self.fit_intercept)
         self._assign_params()
@@ -34,7 +34,8 @@ class BaseModel:
     def predict(self, x) -> NDArray[np.float64]:
         x = self._to_numpy(x)
         x = self._add_intercept(x)
-        return predict(x, self.params_)
+        preds = predict(x, self.params_)
+        return preds.flatten() if preds.shape[1] == 1 else preds
 
     def _add_intercept(self, x: NDArray) -> NDArray[np.float64]:
         if self.fit_intercept:
@@ -44,8 +45,9 @@ class BaseModel:
         return x
 
     def _assign_params(self):
-        self.intercept_ = self.params_[0] if self.fit_intercept else float(0)
-        self.coef_ = self.params_[1:] if self.fit_intercept else self.params_
+        self.intercept_ = np.float64(self.params_[0] if self.fit_intercept else 0)
+        coef_ = self.params_[1:] if self.fit_intercept else self.params_
+        self.coef_ = coef_.flatten() if coef_.shape[1] == 1 else coef_.T
 
     def _assign_feature_names(self, x):
         self.n_features_in_ = x.shape[1]
@@ -61,10 +63,8 @@ class BaseModel:
         :param y: true values for x
         :return: coefficient of determination
         """
-        x = self._to_numpy(x)
-        x = self._add_intercept(x)
-        y_pred = predict(x, self.params_)
-        return r2_score(y, y_pred)
+        y_pred = self.predict(x)
+        return np.float64(r2_score(y.flatten(), y_pred.flatten()))
 
 class LinearRegression(BaseModel):
     """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html"""
@@ -77,6 +77,8 @@ class LinearRegression(BaseModel):
 
     def conf_int(self, sig: float = .05, bootstrap_method: bool =False,
                  bootstrap_iterations: int = 1000) -> NDArray[np.float64]:
+        if self._y.shape[1] > 1:
+            raise NotImplementedError('Confidence intervals are only implemented for single targets')
         if bootstrap_method:
             return conf_int_bootstrap_method(self._X, self._y, sig, bootstrap_iterations)
         else:
@@ -138,7 +140,7 @@ class RidgeCV(BaseModel):
         self._assign_cv(x.shape[0])
         self._assign_scoring(x.shape[0])
 
-        self._X, self._y = self._to_numpy(x), self._to_numpy(y)
+        self._X, self._y = self._to_numpy(x), self._to_numpy(y).reshape(x.shape[0], -1)
         self._X = self._add_intercept(self._X)
 
         self.alpha_, self.best_score_ = find_alpha_loo(self._X, self._y, self.alphas, self.fit_intercept)\

@@ -16,7 +16,8 @@ if __name__ == '__main__':
         noise = np.random.randint(1, 10)
         X, y = make_regression(n_samples=n_samples,
                                n_features=n_features,
-                               noise=noise
+                               noise=noise,
+                               n_targets=1
                                )
         fit_intercept = True
         start_cv = time.time()

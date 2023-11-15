@@ -31,7 +31,7 @@ def parameter_standard_errors(x, scale):
     return np.sqrt(v)
 
 
-@njit(float64[:, ::1](float64[:, ::1], float64[::1], float64[::1], int64, float64), cache=True)
+@njit(float64[:, ::1](float64[:, ::1], float64[:, ::1], float64[:, ::1], int64, float64), cache=True)
 def parameter_confidence_intervals(x, y, weights, dof, t_value):
     """
     https://www.statsmodels.org/stable/generated/statsmodels.regression.linear_model.OLSResults.conf_int.html
@@ -40,10 +40,10 @@ def parameter_confidence_intervals(x, y, weights, dof, t_value):
     lower, upper = params - q * bse, params + q * bse
     """
     y_fitted = predict(x, weights)
-    mse = residual_mean_squared_error(y, y_fitted, dof)
+    mse = residual_mean_squared_error(y.flatten(), y_fitted.flatten(), dof)
     se = parameter_standard_errors(x, mse)
     gap = t_value * se
-    return np.stack((weights - gap, weights + gap))
+    return np.stack((weights.flatten() - gap, weights.flatten() + gap))
 
 
 def calculate_t_value(sig, dof):
@@ -67,7 +67,7 @@ def calculate_ci(samples, sig):
     return percentiles
 
 
-@njit(float64[:, ::1](float64[:, ::1], float64[::1], int64), cache=True, parallel=True)
+@njit(float64[:, ::1](float64[:, ::1], float64[:, ::1], int64), cache=True, parallel=True)
 def create_param_resamples(x, y, n_iterations):
     n_samples, n_features = x.shape
     index_ = np.arange(n_samples)
@@ -79,7 +79,7 @@ def create_param_resamples(x, y, n_iterations):
     return samples
 
 
-@njit(float64[:, ::1](float64[:, ::1], float64[::1], float64, int64), cache=True)
+@njit(float64[:, ::1](float64[:, ::1], float64[:, ::1], float64, int64), cache=True)
 def conf_int_bootstrap_method(x, y, sig, n_iterations):
     samples = create_param_resamples(x, y, n_iterations)
     upper_lower_bounds = calculate_ci(samples, sig)

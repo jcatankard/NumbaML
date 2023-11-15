@@ -24,7 +24,7 @@ def calculate_score(y_true, y_pred, r2):
     return r2_score(y_true, y_pred) if r2 else neg_mean_squared_error(y_true, y_pred)
 
 
-@njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1], boolean, int64, boolean),
+@njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[:, ::1], float64[::1], boolean, int64, boolean),
       parallel=True, cache=True)
 def find_alpha_kfolds(x, y, alphas, fit_intercept, cv, r2):
     n_samples, n_features = x.shape
@@ -46,7 +46,7 @@ def find_alpha_kfolds(x, y, alphas, fit_intercept, cv, r2):
             weights = fit(train_x, train_y, a, fit_intercept)
             preds = predict(test_x, weights)
 
-            scores[j] = calculate_score(test_y, preds, r2)
+            scores[j] = calculate_score(test_y.flatten(), preds.flatten(), r2)
         avg_score = np.mean(scores)
         if avg_score > best_score:
             best_score = avg_score
@@ -55,7 +55,7 @@ def find_alpha_kfolds(x, y, alphas, fit_intercept, cv, r2):
     return best_alpha, best_score
 
 
-@njit(float64[::1](float64[:, ::1], float64[::1], float64, boolean), cache=True)
+@njit(float64[::1](float64[:, ::1], float64[:, ::1], float64, boolean), cache=True)
 def approximate_leave_one_out_errors(x, y, l2_penalty, fit_intercept):
     """https://medium.com/@jcatankard_76170/efficient-leave-one-out-cross-validation-f1dee3b68dfe"""
 
@@ -66,10 +66,10 @@ def approximate_leave_one_out_errors(x, y, l2_penalty, fit_intercept):
     penalty = create_penalty_matrix(l2_penalty, x.shape[1], fit_intercept)
 
     h = np.diag(x @ np.linalg.inv(x.T @ x + penalty) @ x.T)
-    return residuals / (1 - h)
+    return (residuals / (1 - h).reshape(-1, 1)).flatten()
 
 
-@njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[::1], float64[::1], boolean), parallel=True, cache=True)
+@njit(types.UniTuple(float64, 2)(float64[:, ::1], float64[:, ::1], float64[::1], boolean), parallel=True, cache=True)
 def find_alpha_loo(x, y, alphas, fit_intercept):
 
     all_scores = np.zeros(alphas.size, dtype=np.float64)
