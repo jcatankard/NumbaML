@@ -2,27 +2,27 @@ from numbaml.confidence_intervals import conf_int_parameter_method, conf_int_boo
 from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo, r2_score
 from numbaml.predict import predict
 from numbaml.fit import fit
-import numpy.typing as npt
-from typing import List
+from numpy.typing import NDArray
+from typing import Optional
 import numpy as np
 
 
 class BaseModel:
     """https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html"""
-    def __init__(self, alpha: float = None, fit_intercept: bool = True):
+    def __init__(self, alpha: Optional[float] = None, fit_intercept: bool = True):
         """
         :param fit_intercept: Whether to calculate the intercept for this model.
             If set to false, no intercept will be used in calculations (i.e. data is expected to be centered).
         """
         self.fit_intercept = fit_intercept
-        self.n_features_in_: int = None
-        self.feature_names_in_: List[str] = None
-        self.coef_: npt.NDArray = None
-        self.params_: npt.NDArray = None
-        self.intercept_: float = None
-        self.alpha_: float = alpha
-        self._X: npt.NDArray = None
-        self._y: npt.NDArray = None
+        self.n_features_in_: Optional[int] = None
+        self.feature_names_in_: Optional[list[str]] = None
+        self.coef_: Optional[NDArray] = None
+        self.params_: Optional[NDArray] = None
+        self.intercept_: Optional[float] = None
+        self.alpha_: Optional[float] = alpha
+        self._X: Optional[NDArray] = None
+        self._y: Optional[NDArray] = None
 
     def fit(self, x, y):
         self._assign_feature_names(x)
@@ -31,12 +31,12 @@ class BaseModel:
         self.params_ = fit(self._X, self._y, l2_penalty=self.alpha_, fit_intercept=self.fit_intercept)
         self._assign_params()
 
-    def predict(self, x) -> npt.NDArray[np.float64]:
+    def predict(self, x) -> NDArray[np.float64]:
         x = self._to_numpy(x)
         x = self._add_intercept(x)
         return predict(x, self.params_)
 
-    def _add_intercept(self, x: npt.NDArray) -> npt.NDArray[np.float64]:
+    def _add_intercept(self, x: NDArray) -> NDArray[np.float64]:
         if self.fit_intercept:
             n_samples = x.shape[0]
             intercept = np.ones((n_samples, 1), dtype=np.float64)
@@ -52,7 +52,7 @@ class BaseModel:
         self.feature_names_in_ = list(x.columns) if hasattr(x, 'columns') else list(map(str, range(self.n_features_in_)))
 
     @staticmethod
-    def _to_numpy(a) -> npt.NDArray[np.float64]:
+    def _to_numpy(a) -> NDArray[np.float64]:
         return np.asarray(a, dtype=np.float64, order='C')
 
     def score(self, x, y) -> float:
@@ -75,15 +75,16 @@ class LinearRegression(BaseModel):
         """
         super().__init__(alpha=0, fit_intercept=fit_intercept)
 
-    def conf_int(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000) -> npt.NDArray[np.float64]:
+    def conf_int(self, sig: float = .05, bootstrap_method: bool =False,
+                 bootstrap_iterations: int = 1000) -> NDArray[np.float64]:
         if bootstrap_method:
             return conf_int_bootstrap_method(self._X, self._y, sig, bootstrap_iterations)
         else:
             return conf_int_parameter_method(self._X, self._y, self.params_, sig)
 
-    def conf_int_dict(self, sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000) -> dict:
+    def conf_int_dict(self, sig: float = .05, bootstrap_method: bool = False, bootstrap_iterations: int = 1000) -> dict:
         conf_int = self.conf_int(sig, bootstrap_method, bootstrap_iterations).T
-        names = ['intercept'] + self.feature_names_in_ if self.fit_intercept else self.feature_names_in_
+        names = (['intercept'] + self.feature_names_in_) if self.fit_intercept else self.feature_names_in_
         return {
             'feature_name': names,
             'lower_bound': conf_int[0],
@@ -107,7 +108,7 @@ class Ridge(BaseModel):
 class RidgeCV(BaseModel):
     """scikit-learn.org/stable/modules/generated/sklearn.numbaml.RidgeCV.html#sklearn.numbaml.RidgeCV"""
 
-    def __init__(self, alphas: List[float] = (0.1, 1.0, 10.0), cv: int = None, scoring: str = None,
+    def __init__(self, alphas: list[float] = (0.1, 1.0, 10.0), cv: Optional[int] = None, scoring: Optional[str] = None,
                  fit_intercept: bool = True):
         """
         :param alphas: array-like of shape (n_alphas,), default=(0.1, 1.0, 10.0)
@@ -128,9 +129,9 @@ class RidgeCV(BaseModel):
         self.alphas = np.array(alphas, dtype=np.float64)
         self.cv = cv
         self.scoring = scoring
-        self.r2: bool = None
-        self.gcv: str = None
-        self.best_score_: float = None
+        self.r2: Optional[bool] = None
+        self.gcv: Optional[str] = None
+        self.best_score_: Optional[float] = None
 
     def fit(self, x, y):
         self._assign_feature_names(x)
