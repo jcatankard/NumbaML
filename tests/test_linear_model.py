@@ -126,7 +126,7 @@ class TestRegression(unittest.TestCase):
         print('testing multivariate')
         for i in range(self.n_tests):
             print(f'    test {i + 1}')
-            x, y = self.create_data(n_targets=2)#np.random.randint(2, 10))
+            x, y = self.create_data(n_targets=np.random.randint(2, 10))
             kwargs = {'fit_intercept': self.select_fit_intercept()}
             m1, m2 = self.fit_models(x, y, numbaml.linear_model.LinearRegression, LinearRegression, kwargs=kwargs)
             self.common_tests(m1, m2, x, y)
