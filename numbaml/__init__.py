@@ -1,5 +1,1 @@
-__all__ = [
-    'linear_model',
-    'dbml',
-    'metrics'
-]
+from numbaml import linear_model, dbml, metrics
