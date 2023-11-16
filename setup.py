@@ -6,7 +6,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='NumbaML',
-    version='1.0.13',
+    version='1.0.14',
     packages=['numbaml'],
     url='https://github.com/jcatankard/NumbaML',
     author='Josh Tankard',
