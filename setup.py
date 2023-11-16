@@ -6,8 +6,8 @@ with open('README.md', 'r') as f:
 
 setup(
     name='NumbaML',
-    version='1.0.19',
-    packages=['numbaml', 'linear_model', 'dbml', 'metrics'],
+    version='1.0.20',
+    packages=['numbaml'],
     url='https://github.com/jcatankard/NumbaML',
     author='Josh Tankard',
     description='Linear regression with Numba',
