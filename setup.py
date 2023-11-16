@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 with open('README.md', 'r') as f:
@@ -6,8 +6,8 @@ with open('README.md', 'r') as f:
 
 setup(
     name='NumbaML',
-    version='1.0.20',
-    packages=['numbaml'],
+    version='1.0.21',
+    packages=find_packages(),
     url='https://github.com/jcatankard/NumbaML',
     author='Josh Tankard',
     description='Linear regression with Numba',
