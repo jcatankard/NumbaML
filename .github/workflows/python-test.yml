@@ -23,5 +23,4 @@ jobs:
           pip install -r requirements.txt
       - name: Run tests with unittest
         run:
-          python -m unittest tests/test_linear_model.py
-          python -m unittest tests/test_dbml.py
+          python -m unittest tests
