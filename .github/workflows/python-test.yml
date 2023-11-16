@@ -24,4 +24,4 @@ jobs:
       - name: Run tests with unittest
         run:
           python -m unittest tests/test_linear_model.py
-          python -m unittest tests/test_ridge_causal_inference.py
+          python -m unittest tests/test_dbml.py

@@ -34,9 +34,9 @@ The aim has been to reproduce the key functionality from Scikit-Learn as accurat
 
 ### LinearRegression
 #### Methods
- - conf_int(sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000): array, shape (n_features + 1, 2)
+ - conf_int(sig=.05): array, shape (n_features + 1, 2)
    - confidence intervals for each parameter (inc. intercept) including intercept
- - conf_int_dict(sig=.05, bootstrap_method=False, bootstrap_iterations: int = 1000): dict
+ - conf_int_dict(sig=.05): dict
    - returns feature names (inc. intercept) with coef values + confidence intervals in a dict that can be transformed into a dataframe
 
 ### Ridge

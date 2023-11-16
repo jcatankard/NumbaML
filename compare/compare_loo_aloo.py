@@ -1,4 +1,4 @@
-from numbaml.linear_model.model_selection import find_alpha_loo, find_alpha_kfolds
+from numbaml.linear_model._model_selection import find_alpha_loo, find_alpha_kfolds
 from sklearn.datasets import make_regression
 import pandas as pd
 import numpy as np
@@ -19,6 +19,7 @@ if __name__ == '__main__':
                                noise=noise,
                                n_targets=1
                                )
+        y = y.reshape(y.shape[0], -1)
         fit_intercept = True
         start_cv = time.time()
         alpha_cv, score_cv = find_alpha_kfolds(X, y, alphas, cv=n_samples, r2=False, fit_intercept=fit_intercept)

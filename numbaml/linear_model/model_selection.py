@@ -1,5 +1,5 @@
+from ..metrics import r2_score, neg_mean_squared_error
 from .fit import fit, create_penalty_matrix
-from .metrics import r2_score, neg_mean_squared_error
 from .predict import predict
 
 from numba import njit, float64, int64, types, prange, boolean

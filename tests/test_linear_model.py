@@ -33,7 +33,7 @@ class TestRegression(unittest.TestCase):
         m3 = sm.OLS(y, x)
         r3 = m3.fit()
         sig = np.random.choice([0.01, 0.025, 0.05, 0.1], size=None)
-        ci1 = model.conf_int(sig=sig, bootstrap_method=False)
+        ci1 = model.conf_int(sig=sig)
         ci3 = r3.conf_int(alpha=sig)
         np.testing.assert_allclose(ci1, ci3, atol=self.atol, rtol=self.rtol)
 

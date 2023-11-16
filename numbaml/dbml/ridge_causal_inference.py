@@ -1,4 +1,4 @@
-from ..linear_model.model_selection import approximate_leave_one_out_errors
+from ..linear_model import approximate_leave_one_out_errors
 from ..linear_model import RidgeCV, LinearRegression
 
 from numpy.typing import NDArray
