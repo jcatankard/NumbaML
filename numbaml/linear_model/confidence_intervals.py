@@ -1,7 +1,8 @@
-from numbaml.metrics import residual_mean_squared_error
+from .metrics import residual_mean_squared_error
+from .predict import predict
+from .fit import fit
+
 from numba import njit, int64, float64, prange
-from numbaml.predict import predict
-from numbaml.fit import fit
 from scipy import stats
 import numpy as np
 

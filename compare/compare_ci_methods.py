@@ -1,4 +1,4 @@
-from numbaml.linear_model import LinearRegression
+from numbaml.linear_model._linear_model import LinearRegression
 from sklearn.datasets import make_regression
 import numpy as np
 

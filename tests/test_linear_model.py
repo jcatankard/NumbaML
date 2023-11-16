@@ -1,11 +1,11 @@
-from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
 from sklearn.datasets import make_regression
 import statsmodels.api as sm
 import numpy.typing as npt
 from typing import Tuple
 import numpy as np
 import unittest
-import numbaml
+import numbaml.linear_model
+import sklearn.linear_model
 
 
 class TestRegression(unittest.TestCase):
@@ -90,7 +90,11 @@ class TestRegression(unittest.TestCase):
             print(f'    test {i + 1}')
             x, y = self.create_data()
             kwargs = {'fit_intercept': self.select_fit_intercept()}
-            m1, m2 = self.fit_models(x, y, numbaml.linear_model.LinearRegression, LinearRegression, kwargs=kwargs)
+            m1, m2 = self.fit_models(x, y,
+                                     numbaml.linear_model.LinearRegression,
+                                     sklearn.linear_model.LinearRegression,
+                                     kwargs=kwargs
+                                     )
             self.common_tests(m1, m2, x, y)
             self.score_test(m1, m2, x, y)
             self.ci_test(m1, x, y, kwargs['fit_intercept'])
@@ -101,7 +105,11 @@ class TestRegression(unittest.TestCase):
             print(f'    test {i + 1}')
             x, y = self.create_data()
             kwargs = {'alpha': self.select_alphas(1), 'fit_intercept': self.select_fit_intercept()}
-            m1, m2 = self.fit_models(x, y, numbaml.linear_model.Ridge, Ridge, kwargs=kwargs)
+            m1, m2 = self.fit_models(x, y,
+                                     numbaml.linear_model.Ridge,
+                                     sklearn.linear_model.Ridge,
+                                     kwargs=kwargs
+                                     )
             self.common_tests(m1, m2, x, y)
             self.score_test(m1, m2, x, y)
 
@@ -116,7 +124,11 @@ class TestRegression(unittest.TestCase):
                       'cv': cv,
                       'fit_intercept': self.select_fit_intercept()
                       }
-            m1, m2 = self.fit_models(x, y, numbaml.linear_model.RidgeCV, RidgeCV, kwargs=kwargs)
+            m1, m2 = self.fit_models(x, y,
+                                     numbaml.linear_model.RidgeCV,
+                                     sklearn.linear_model.RidgeCV,
+                                     kwargs=kwargs
+                                     )
             self.common_tests(m1, m2, x, y)
             self.score_test(m1, m2, x, y)
             self.alpha_test(m1, m2)
@@ -128,5 +140,9 @@ class TestRegression(unittest.TestCase):
             print(f'    test {i + 1}')
             x, y = self.create_data(n_targets=np.random.randint(2, 10))
             kwargs = {'fit_intercept': self.select_fit_intercept()}
-            m1, m2 = self.fit_models(x, y, numbaml.linear_model.LinearRegression, LinearRegression, kwargs=kwargs)
+            m1, m2 = self.fit_models(x, y,
+                                     numbaml.linear_model.LinearRegression,
+                                     sklearn.linear_model.LinearRegression,
+                                     kwargs=kwargs
+                                     )
             self.common_tests(m1, m2, x, y)

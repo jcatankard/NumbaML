@@ -1,1 +1,1 @@
-from numbaml import linear_model
+from numbaml.linear_model import _linear_model

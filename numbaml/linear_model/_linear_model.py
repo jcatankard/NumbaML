@@ -1,10 +1,12 @@
-from numbaml.confidence_intervals import conf_int_parameter_method, conf_int_bootstrap_method
-from numbaml.model_selection import find_alpha_kfolds, find_alpha_loo, r2_score
-from numbaml.predict import predict
-from numbaml.fit import fit
+from .confidence_intervals import conf_int_parameter_method, conf_int_bootstrap_method
+from .model_selection import find_alpha_kfolds, find_alpha_loo, r2_score
+from .predict import predict
+from .fit import fit
+
 from numpy.typing import NDArray
 from typing import Optional
 import numpy as np
+
 
 
 class BaseModel:

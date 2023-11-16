@@ -1,4 +1,4 @@
-from numbaml.model_selection import find_alpha_loo, find_alpha_kfolds
+from numbaml.linear_model.model_selection import find_alpha_loo, find_alpha_kfolds
 from sklearn.datasets import make_regression
 import pandas as pd
 import numpy as np
